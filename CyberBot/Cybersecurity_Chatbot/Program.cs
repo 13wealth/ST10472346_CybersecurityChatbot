@@ -18,10 +18,6 @@ namespace Cybersecurity_Chatbot
 
                 string choice = InputValidation.InputHandler(input);                                            //-Validate and process the user input to determine the topic
 
-                /*
-                 * The conditions below treats the variable "choice" as the final processed input.
-                 * If the user types "exit" or "4", it will trigger the exit condition
-                 */
                 if (choice == "exit")                                                                           //-Early exit condition
                 {
                     ResponseSystem.ExitMessage();
