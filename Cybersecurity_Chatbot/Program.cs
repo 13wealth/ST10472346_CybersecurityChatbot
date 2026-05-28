@@ -6,7 +6,7 @@ namespace Cybersecurity_Chatbot
     {
         static void Main(string[] args)
         {
-            Logo.AnimatedLogo();                                                                                //-Display the logo of the chatbot
+            Logo.AsciiLogo();                                                                                //-Display the logo of the chatbot
             UI.WelcomeMessage();                                                                                //-Start welcome sound in the background
             UI.GetUserData();                                                                                   //-Get user data while welcome audio is playing
 

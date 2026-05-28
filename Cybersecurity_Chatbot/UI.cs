@@ -6,8 +6,9 @@ namespace Cybersecurity_Chatbot
     /**
      * UI class handles all user interactions, including displaying messages, menus, and prompts. 
      * It also manages the welcome sound and validates user input for continuing the conversation.
+     * Changed the class from internal to public to allow access from the WPF application
      */
-    internal class UI
+    public class UI
     {
         private static SoundPlayer welcomePlayer;
 

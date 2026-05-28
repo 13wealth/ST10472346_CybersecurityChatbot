@@ -7,10 +7,11 @@ using System.Threading.Tasks;
 
 namespace Cybersecurity_Chatbot
 {
-    internal class Logo
+    public class Logo
     {
-        public static void AnimatedLogo()
+        public static void AsciiLogo()
         {
+    
     string[] logo =                                                                                             //-Store the logo as an array of strings, One string = one line of the logo
     {
         " ",

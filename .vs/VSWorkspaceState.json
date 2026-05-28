@@ -1,6 +1,8 @@
 {
   "ExpandedNodes": [
-    ""
+    "",
+    "\\.github\\workflows",
+    "\\CybersecurityChatbot"
   ],
   "PreviewInSolutionExplorer": false
 }
