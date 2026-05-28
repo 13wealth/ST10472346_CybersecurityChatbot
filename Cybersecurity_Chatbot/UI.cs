@@ -12,18 +12,21 @@ namespace Cybersecurity_Chatbot
     {
         private static SoundPlayer welcomePlayer;
 
-        public static void GetUserData()
+        public static void BotGreeting(Action<string> output)
         {
             Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.WriteLine();
-            Console.WriteLine();
-            Console.WriteLine("****************************************************************");
-            Console.WriteLine("                   W   E   L   C   O   M   E                    ");
-            Console.WriteLine("****************************************************************");
-            Console.WriteLine();
+            output(" ");
+            output(" ");
+            output("************************************************************");
+            output("                   W   E   L   C   O   M   E                ");
+            output("************************************************************");
+            output(" ");
             Console.ResetColor();
+            output("Bot: Hello human... I am a Cybersecurity Awareness Bot, here to help you stay safe online.\n");
+        }
 
-            TypeText("Bot: Hello human... I am a Cybersecurity Awareness Bot, here to help you stay safe online.\n");
+        public static void GetUserData()
+        {
             TypeText("Bot: What should I call you? \nYou: ");
             string name = Console.ReadLine();
 

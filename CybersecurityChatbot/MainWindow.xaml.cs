@@ -34,15 +34,19 @@ namespace CybersecurityChatbot
     {
         public MainWindow()
         {
-            InitializeComponent(); //Start taask to play a welcome sound and load ASCII art
-
+            InitializeComponent();                                                                                        
             UI.WelcomeMessage();                                                                                          //Static method from the console UI class to play the welcome sound
-            AsciiArtBlock.Text = Logo.GetAscii();                                                                                             //Static method from the console Logo class to display the ASCII logo in the console
+            ChatHistoryBox.Text = "";                                                                                     //Initialize the chat history box as an empty string (Resets history on each startup
+            
+            UI.BotGreeting(message =>
+            {
+                ChatHistoryBox.Text += message + Environment.NewLine;
+            });                                                                                                           //Static method from the console UI class to display the bot's greeting in the console
 
+            AsciiArtBlock.Text = Logo.GetAscii();                                                                         //Static method from the console Logo class to display the ASCII logo in the console
 
-
-            _messages = ChatHistoryStore.LoadHistory();                                                                   // 1. Load existing history from JSON store
-            RefreshChatBox();                                                                                             // 2. Display the loaded history in the UI
+            /*_messages = ChatHistoryStore.LoadHistory();                                                                   // 1. Load existing history from JSON store
+            RefreshChatBox();*/                                                                                             // 2. Display the loaded history in the UI
         }   
 
 

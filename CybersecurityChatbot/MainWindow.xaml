@@ -84,7 +84,8 @@
                 CornerRadius="20"
         >                                                                               <!-- Container for the ASCII section and avatar -->
             <StackPanel VerticalAlignment="Center"
-                        HorizontalAlignment="Center">
+                        HorizontalAlignment="Center"
+            >                                                                           <!--- Create a vertical layout for the ASCII art and avatar -->
                 <TextBlock Text="Cybersecurity Bot"
                            Foreground="#00FFFF"
                            FontSize="26"
@@ -93,21 +94,21 @@
                            Margin="0,0,0,20"
                 />                                                                      <!--- Heading block -->
                 <Viewbox Grid.Column="1"
-         Stretch="Uniform"
-         HorizontalAlignment="Center"
-         VerticalAlignment="Center">
+                         Stretch="Uniform"
+                         HorizontalAlignment="Center"
+                         VerticalAlignment="Center"
+                >                                                                       <!-- Wraps the ASCII art for a responsive display -->
                     <TextBlock x:Name="AsciiArtBlock"
-                   Foreground="#00FFFF"
-                   FontFamily="Consolas"
-                   FontSize="14"
-                   TextAlignment="Center"
-                />
-                    <!--- ASCII Art Block -->
+                               Foreground="#00FFFF"
+                               FontFamily="Consolas"
+                               FontSize="14"
+                               TextAlignment="Center"
+                />                                                                      <!--- ASCII Art Block -->
                 </Viewbox>
             </StackPanel>
         </Border>
 
-        <!-- RIGHT SIDE FOR CHAT BUBBLE -->
+<!-- RIGHT SIDE FOR CHAT BUBBLE -->
 
         <Border x:Name="ChatBubble"
                 Grid.Column="2"
@@ -119,8 +120,7 @@
                 Visibility="Collapsed">
             <Grid Margin="10">
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="*"/>
-                    <!-- Sets the row height to fill available space -->
+                    <RowDefinition Height="*"/>                                        <!-- Sets the row height to fill available space -->
                 </Grid.RowDefinitions>
 
                 <Button x:Name="CloseChatButton"
@@ -167,8 +167,8 @@
                 <ScrollViewer x:Name="ChatScroll"
                               VerticalScrollBarVisibility="Auto"
                               Grid.Row="0"
-                >
-                    <!-- Allows the chat history to be scrollable when it exceeds the visible area -->
+                >                                                                       <!-- Allows the chat history to be scrollable when it exceeds the visible area -->
+                    
                     <TextBox x:Name="ChatHistoryBox"
                              IsReadOnly="True"
                              TextWrapping="Wrap"
@@ -179,8 +179,6 @@
                              Padding="5"
                     />
                 </ScrollViewer>
-
-
             </Grid>
         </Border>
 
