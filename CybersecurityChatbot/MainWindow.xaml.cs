@@ -37,7 +37,7 @@ namespace CybersecurityChatbot
             InitializeComponent(); //Start taask to play a welcome sound and load ASCII art
 
             UI.WelcomeMessage();                                                                                          //Static method from the console UI class to play the welcome sound
-            Logo.AsciiLogo();                                                                                             //Static method from the console Logo class to display the ASCII logo in the console
+            AsciiArtBlock.Text = Logo.GetAscii();                                                                                             //Static method from the console Logo class to display the ASCII logo in the console
 
 
 

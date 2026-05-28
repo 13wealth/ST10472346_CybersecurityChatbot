@@ -90,22 +90,20 @@
                            FontSize="26"
                         FontWeight="Bold"
                            HorizontalAlignment="Center"
-                           Margin="0,0,0,20"/>
-                <TextBlock Foreground="#00FFFF"
-                           FontFamily="Consolas"
-                        FontSize="14"
-                           HorizontalAlignment="Center"
-                           TextAlignment="Center">
-                    <Run Text="    ___  _   _   ___  ___  ___ "/>
-                    <LineBreak/>
-                    <Run Text="   / __|| | | | / _ \|_ _||_ _|"/>
-                    <LineBreak/>
-                    <Run Text="  | (__ | |_| ||  _  | | |  | | "/>
-                    <LineBreak/>
-                    <Run Text="   \___| \__, ||_| |_||___||___|"/>
-                    <LineBreak/>
-                    <Run Text="         |___/                  "/>
-                </TextBlock>
+                           Margin="0,0,0,20"
+                />                                                                      <!--- Heading block -->
+                <Viewbox Grid.Column="1"
+         Stretch="Uniform"
+         HorizontalAlignment="Center"
+         VerticalAlignment="Center">
+                    <TextBlock x:Name="AsciiArtBlock"
+                   Foreground="#00FFFF"
+                   FontFamily="Consolas"
+                   FontSize="14"
+                   TextAlignment="Center"
+                />
+                    <!--- ASCII Art Block -->
+                </Viewbox>
             </StackPanel>
         </Border>
 
