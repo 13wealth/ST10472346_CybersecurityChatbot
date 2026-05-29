@@ -12,9 +12,9 @@
         Background="#0B132B">
 
     <Window.Resources>
-        <Style TargetType="Button">                                                                 <!-- Global button style for a modern look -->          
+        <Style TargetType="Button">                                                                             <!-- Global button style for a modern look -->          
             <Setter Property="Background"
-                    Value="#00FFFF"/>                                                             <!-- Applies this styleto all Button controls unless overridden -->
+                    Value="#00FFFF"/>                                                                           <!-- Applies this styleto all Button controls unless overridden -->
             <Setter Property="Foreground"
                     Value="Black"/>
             <Setter Property="FontWeight"
@@ -28,11 +28,11 @@
             <Setter Property="Template">
                 <Setter.Value>
                     
-                    <ControlTemplate TargetType="Button">                                           <!-- Defines a custom ControlTemplate that replaces the default button UI -->         
+                    <ControlTemplate TargetType="Button">                                                       <!-- Defines a custom ControlTemplate that replaces the default button UI -->         
                         <Border Background="{TemplateBinding Background}"
-                                CornerRadius="12">                                                  <!-- Rounded corners and background color from the style -->                           
+                                CornerRadius="12">                                                              <!-- Rounded corners and background color from the style -->                           
                             <ContentPresenter HorizontalAlignment="Center"
-                                    VerticalAlignment="Center"/>                                    <!-- Displays the button's content/text centered within the border -->                             
+                                    VerticalAlignment="Center"/>                                                <!-- Displays the button's content/text centered within the border -->                             
                         </Border>
                     </ControlTemplate>
                 </Setter.Value>
@@ -41,9 +41,9 @@
     </Window.Resources>
 
     <Grid Margin="10">
-        <Grid.ColumnDefinitions>                                                                    <!-- Defines the columns in the grid -->            
-            <ColumnDefinition Width="200"/>                                                         <!-- Left sidebar for recents -->          
-            <ColumnDefinition Width="*"/>                                                           <!-- Main area for bot avatar and ASCII art -->           
+        <Grid.ColumnDefinitions>                                                                                <!-- Defines the columns in the grid -->            
+            <ColumnDefinition Width="200"/>                                                                     <!-- Left sidebar for recents -->          
+            <ColumnDefinition Width="*"/>                                                                       <!-- Main area for bot avatar and ASCII art -->           
             <ColumnDefinition x:Name="BubbleColumn" Width="0"/>
             <!-- Right column for chat bubble, Width="0" means it's hidden at startup -->
         </Grid.ColumnDefinitions>
@@ -82,28 +82,28 @@
                 Margin="5"
                 Background="#1C2541"
                 CornerRadius="20"
-        >                                                                               <!-- Container for the ASCII section and avatar -->
+        >                                                                                                       <!-- Container for the ASCII section and avatar -->
             <StackPanel VerticalAlignment="Center"
                         HorizontalAlignment="Center"
-            >                                                                           <!--- Create a vertical layout for the ASCII art and avatar -->
+            >                                                                                                   <!-- Create a vertical layout for the ASCII art and avatar -->
                 <TextBlock Text="Cybersecurity Bot"
                            Foreground="#00FFFF"
                            FontSize="26"
                         FontWeight="Bold"
                            HorizontalAlignment="Center"
                            Margin="0,0,0,20"
-                />                                                                      <!--- Heading block -->
+                />                                                                                              <!-- Heading block -->
                 <Viewbox Grid.Column="1"
                          Stretch="Uniform"
                          HorizontalAlignment="Center"
                          VerticalAlignment="Center"
-                >                                                                       <!-- Wraps the ASCII art for a responsive display -->
+                >                                                                                               <!-- Wraps the ASCII art for a responsive display -->
                     <TextBlock x:Name="AsciiArtBlock"
                                Foreground="#00FFFF"
                                FontFamily="Consolas"
                                FontSize="14"
                                TextAlignment="Center"
-                />                                                                      <!--- ASCII Art Block -->
+                />                                                                                              <!-- ASCII Art Block -->
                 </Viewbox>
             </StackPanel>
         </Border>
@@ -120,7 +120,7 @@
                 Visibility="Collapsed">
             <Grid Margin="10">
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="*"/>                                        <!-- Sets the row height to fill available space -->
+                    <RowDefinition Height="*"/>                                                                 <!-- Sets the row height to fill available space -->
                 </Grid.RowDefinitions>
 
                 <Button x:Name="CloseChatButton"
@@ -139,23 +139,17 @@
                         Panel.ZIndex="50"
                         Cursor="Hand"
                 >
-                    <Button.Style>
-                        <!-- Custom style to make the close button circular with blue bg and close as content -->
+                    <Button.Style>                                                                              <!-- Custom style to make the close button circular with blue bg and close as content -->
                         <Style TargetType="Button">
-                            <Setter Property="Template">
-                                <!-- Declares that the default style is overridden -->
-                                <Setter.Value>
-                                    <!-- Override the default button styling -->
-                                    <ControlTemplate TargetType="Button">
-                                        <!-- Creates a circular button template -->
-                                        <Grid>
-                                            <!-- Sets a layout container and lets you lay elements ontop of each other -->
+                            <Setter Property="Template">                                                        <!-- Declares that the default style is overridden -->                    
+                                <Setter.Value>                                                                  <!-- Override the default button styling -->                                  
+                                    <ControlTemplate TargetType="Button">                                       <!-- Creates a circular button template -->                                      
+                                        <Grid>                                                                   <!-- Sets a layout container and lets you lay elements ontop of each other -->
                                             <Ellipse Fill="#1E88FF"/>
                                             <ContentPresenter
                                                 HorizontalAlignment="Center"
                                                     VerticalAlignment="Center"
-                                            />
-                                            <!-- Displays the content inside the button -->
+                                            />                                                                  <!-- Displays the content inside the button -->
                                         </Grid>
                                     </ControlTemplate>
                                 </Setter.Value>
@@ -167,8 +161,7 @@
                 <ScrollViewer x:Name="ChatScroll"
                               VerticalScrollBarVisibility="Auto"
                               Grid.Row="0"
-                >                                                                       <!-- Allows the chat history to be scrollable when it exceeds the visible area -->
-                    
+                >                                                                                               <!-- Allows the chat history to be scrollable when it exceeds the visible area -->
                     <TextBox x:Name="ChatHistoryBox"
                              IsReadOnly="True"
                              TextWrapping="Wrap"
@@ -182,7 +175,7 @@
             </Grid>
         </Border>
 
-        <!-- Text Input Box positioned above bot avatar -->
+<!-- Text Input Box positioned above bot avatar -->
 
         <Grid Grid.Column="2"
               HorizontalAlignment="Center"
@@ -248,7 +241,7 @@
             </StackPanel>
         </Grid>
 
-        <!-- BOT AVATAR -->
+<!-- BOT AVATAR -->
 
         <Grid Grid.ColumnSpan="3"
               HorizontalAlignment="Right"
