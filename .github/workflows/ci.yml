@@ -21,13 +21,13 @@ jobs:
           dotnet-version: 10.0.x
 
       - name: Restore Console
-        run: dotnet restore ST10472346_CybersecurityChatbot/Cybersecurity_Chatbot.sln
+        run: dotnet restore Cybersecurity_Chatbot/Cybersecurity_Chatbot.sln
 
       - name: Build Console
-        run: dotnet build ST10472346_CybersecurityChatbot/Cybersecurity_Chatbot.sln --configuration Release --no-restore
+        run: dotnet build Cybersecurity_Chatbot/Cybersecurity_Chatbot.sln --configuration Release --no-restore
 
       - name: Restore WPF
-        run: dotnet restore ST10472346_CybersecurityChatbot/CybersecurityChatbot.sln
+        run: dotnet restore CybersecurityChatbot/CybersecurityChatbot.csproj
 
       - name: Build WPF
-        run: dotnet build ST10472346_CybersecurityChatbot/CybersecurityChatbot.sln --configuration Release --no-restore
+        run: dotnet build CybersecurityChatbot/CybersecurityChatbot.csproj --configuration Release --no-restore
