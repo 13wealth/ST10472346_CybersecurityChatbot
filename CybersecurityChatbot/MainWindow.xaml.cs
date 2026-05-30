@@ -37,21 +37,58 @@ namespace CybersecurityChatbot
             AsciiArtBlock.Text = Logo.GetAscii();                                                               //-Static method from the console Logo class to display the ASCII logo in the console        
 
             _chatbot = new ChatBot();                                                                           //-Initialise the chatbot instance to handle user interactions and generate responses
-            AppendBotMessage(_chatbot.GetInitialPrompt());
+            AppendBotMessage(_chatbot.ProcessInput(""));                                                        //- Start the conversation by processing an empty input to trigger the initial prompt from the chatbot
         }
+
+
+/******************************** UI EVENT HANDLERS *******************************/
+
+        private void SendButton_Click(object sender, RoutedEventArgs e)
+        {
+            HandleUserMessage();
+        }
+
+
+        private void MessageInput_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter)
+            {
+                HandleUserMessage();
+                e.Handled = true;
+            }
+        }
+
 
         private void OpenChatButton_Click(object sender, RoutedEventArgs e)
         {
             OpenChatPanel();
         }
 
-        private void CloseChatButton_Click(object sender, RoutedEventArgs e)
+
+/******************************* UI DISPLAY HANDLERS *******************************/
+
+        private void AppendUserMessage(string message)
         {
-            ChatPanelBorder.Visibility = Visibility.Collapsed;
-            ChatPanelBorder.Opacity = 0;
-            ChatSlideTransform.X = 180;
-            ChatColumn.Width = new GridLength(0);
+            Messages.Add(new ChatMessage("User", message));
+            ScrollToLatestMessage();
         }
+
+        private void AppendBotMessage(string message)
+        {
+            Messages.Add(new ChatMessage("Bot", message));
+            ScrollToLatestMessage();
+        }
+       
+        private void ScrollToLatestMessage()
+        {
+            Dispatcher.BeginInvoke(DispatcherPriority.Background, new Action(() =>
+            {
+                ChatScroll.ScrollToEnd();
+            }));
+        }
+
+
+/******************************* UI ANIMATION HANDLERS *******************************/
 
         private void OpenChatPanel()
         {
@@ -64,6 +101,15 @@ namespace CybersecurityChatbot
             ChatPanelBorder.BeginAnimation(OpacityProperty, new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(400)));
             ChatSlideTransform.BeginAnimation(TranslateTransform.XProperty, new DoubleAnimation(180, 0, TimeSpan.FromMilliseconds(400)));
         }
+
+        private void CloseChatButton_Click(object sender, RoutedEventArgs e)
+        {
+            ChatPanelBorder.Visibility = Visibility.Collapsed;
+            ChatPanelBorder.Opacity = 0;
+            ChatSlideTransform.X = 180;
+            ChatColumn.Width = new GridLength(0);
+        }
+
 
 
         /*
@@ -84,41 +130,8 @@ namespace CybersecurityChatbot
             AppendBotMessage(botReply);                                                                         //- Process the user input through the chatbot and display the response
 
             MessageInput.Clear();                                                                               //- Clear the input box after processing the message
-        }
+        }  
 
-        private void MessageInput_KeyDown(object sender, KeyEventArgs e)
-        {
-            if (e.Key == Key.Enter)
-            {
-                HandleUserMessage();
-                e.Handled = true;
-            }
-        }
-
-        private void SendButton_Click(object sender, RoutedEventArgs e)
-        {
-            HandleUserMessage();
-        }
-
-        private void ScrollToLatestMessage()
-        {
-            Dispatcher.BeginInvoke(DispatcherPriority.Background, new Action(() =>
-            {
-                ChatScroll.ScrollToEnd();
-            }));
-        }
-
-        private void AppendUserMessage(string message)
-        {
-            Messages.Add(new ChatMessage("User", message));
-            ScrollToLatestMessage();
-        }
-
-        private void AppendBotMessage(string message)
-        {
-            Messages.Add(new ChatMessage("Bot", message));
-            ScrollToLatestMessage();
-        }
     }
 }
 

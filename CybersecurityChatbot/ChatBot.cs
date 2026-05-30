@@ -14,6 +14,7 @@ namespace CybersecurityChatbot
         private readonly KeywordResponder _keywords;
         private readonly SentimentDetector _sentiment;
         private readonly MemoryStore _memory;
+        private bool _hasShownInitialPrompt;
         private bool _hasShownPersonalisedIntro;
 
         public ChatBot()
@@ -21,19 +22,21 @@ namespace CybersecurityChatbot
             _keywords = new KeywordResponder();
             _sentiment = new SentimentDetector();
             _memory = new MemoryStore();
-        }
-
-        public string GetInitialPrompt()
-        {
-            return "What should I call you?";
+            _hasShownInitialPrompt = false;
         }
 
         public string ProcessInput(string userInput)
         {
+            if (!_hasShownInitialPrompt)
+            {
+                _hasShownInitialPrompt = true;
+                return "What should I call you?";
+            }
+
             if (string.IsNullOrWhiteSpace(_memory.Recall("username")))
             {
                 InitialiseMemory(userInput, string.Empty);
-                return $"Thanks {userInput}! And what's your favourite cybersecurity topic?";
+                return $"Nice to meet you {userInput}! And what's your favourite cybersecurity topic?";
             }
 
             if (string.IsNullOrWhiteSpace(_memory.Recall("favouritetopic")))
@@ -41,10 +44,11 @@ namespace CybersecurityChatbot
                 string currentName = _memory.Recall("username");
                 InitialiseMemory(currentName, userInput);
 
-                return CombineResponses(
-                    $"Thanks {currentName}. We can start chatting now.",
+                return CombineResponses
+                (
                     BuildPersonalisedIntro(),
-                    BuildNormalResponse(userInput));
+                    BuildNormalResponse(userInput)
+                );
             }
 
             return BuildNormalResponse(userInput);
