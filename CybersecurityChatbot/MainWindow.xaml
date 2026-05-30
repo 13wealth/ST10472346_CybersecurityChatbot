@@ -41,12 +41,56 @@
         <SolidColorBrush x:Key="BotBubbleBrush" Color="#163045"/>
         <SolidColorBrush x:Key="UserBubbleBrush" Color="#12B886"/>
         <SolidColorBrush x:Key="SidePanelBrush" Color="#165DA7"/>
-        <ImageBrush x:Key="ChatPanelBackgroundBrush"
-                ImageSource="pack://siteoforigin:,,,/assets/chat-bg.jpg"
-                Stretch="UniformToFill"
-                AlignmentX="Center"
-                AlignmentY="Center"/>
         <SolidColorBrush x:Key="ChatPanelOverlayBrush" Color="#8A08111F"/>
+
+        <DataTemplate x:Key="BotMessageTemplate">
+            <Grid Margin="0,8,0,8">
+                <Border HorizontalAlignment="Left"
+                        Background="{StaticResource BotBubbleBrush}"
+                        CornerRadius="18"
+                        Padding="14,10"
+                        MaxWidth="460">
+                    <StackPanel>
+                        <TextBlock Text="Bot"
+                                   Foreground="#6EE7FF"
+                                   FontSize="11"
+                                   FontWeight="Bold"
+                                   Margin="0,0,0,4"/>
+                        <TextBlock Text="{Binding Text}"
+                                   Foreground="White"
+                                   FontSize="14"
+                                   TextWrapping="Wrap"/>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </DataTemplate>
+
+        <DataTemplate x:Key="UserMessageTemplate">
+            <Grid Margin="0,8,0,8">
+                <Border HorizontalAlignment="Right"
+                        Background="{StaticResource UserBubbleBrush}"
+                        CornerRadius="18"
+                        Padding="14,10"
+                        MaxWidth="460">
+                    <StackPanel>
+                        <TextBlock Text="You"
+                                   Foreground="#EFFFFB"
+                                   FontSize="11"
+                                   FontWeight="Bold"
+                                   Margin="0,0,0,4"
+                                   HorizontalAlignment="Right"/>
+                        <TextBlock Text="{Binding Text}"
+                                   Foreground="#071018"
+                                   FontSize="14"
+                                   TextWrapping="Wrap"/>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </DataTemplate>
+
+        <local:ChatRoleTemplateSelector x:Key="ChatRoleTemplateSelector"
+                                        BotTemplate="{StaticResource BotMessageTemplate}"
+                                        UserTemplate="{StaticResource UserMessageTemplate}"/>
 
     </Window.Resources>
 
@@ -234,7 +278,7 @@
 
         <Border Grid.Column="2"
                 x:Name="ChatPanelBorder"
-            Background="{StaticResource ChatPanelBackgroundBrush}"
+                Background="#0C1626"
                 CornerRadius="24"
                 Padding="20"
                 Opacity="0"
@@ -276,9 +320,15 @@
                     <ScrollViewer VerticalScrollBarVisibility="Hidden"
                                   HorizontalScrollBarVisibility="Disabled"
                                   x:Name="ChatScroll">
-                        <StackPanel x:Name="ChatMessagesHost"
-                                    HorizontalAlignment="Stretch"
-                                    Width="{Binding ViewportWidth, ElementName=ChatScroll}"/>
+                        <ItemsControl x:Name="ChatMessagesList"
+                                      ItemsSource="{Binding Messages}"
+                                      ItemTemplateSelector="{StaticResource ChatRoleTemplateSelector}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <StackPanel HorizontalAlignment="Stretch"/>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                        </ItemsControl>
                     </ScrollViewer>
                 </Border>
 

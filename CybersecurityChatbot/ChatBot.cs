@@ -23,7 +23,34 @@ namespace CybersecurityChatbot
             _memory = new MemoryStore();
         }
 
+        public string GetInitialPrompt()
+        {
+            return "What should I call you?";
+        }
+
         public string ProcessInput(string userInput)
+        {
+            if (string.IsNullOrWhiteSpace(_memory.Recall("username")))
+            {
+                InitialiseMemory(userInput, string.Empty);
+                return $"Thanks {userInput}! And what's your favourite cybersecurity topic?";
+            }
+
+            if (string.IsNullOrWhiteSpace(_memory.Recall("favouritetopic")))
+            {
+                string currentName = _memory.Recall("username");
+                InitialiseMemory(currentName, userInput);
+
+                return CombineResponses(
+                    $"Thanks {currentName}. We can start chatting now.",
+                    BuildPersonalisedIntro(),
+                    BuildNormalResponse(userInput));
+            }
+
+            return BuildNormalResponse(userInput);
+        }
+
+        private string BuildNormalResponse(string userInput)
         {
             Sentiment sentiment = _sentiment.Detect(userInput);
             string sentimentResponse = _sentiment.GetSentimentResponse(sentiment);
