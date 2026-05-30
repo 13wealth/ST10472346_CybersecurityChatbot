@@ -16,6 +16,19 @@ namespace CybersecurityChatbot
         private readonly MemoryStore _memory;
         private bool _hasShownInitialPrompt;
         private bool _hasShownPersonalisedIntro;
+        private const string CurrentTopicKey = "currenttopic";
+        private static readonly string[] TopicKeywords =
+        {
+            "password",
+            "phishing",
+            "privacy",
+            "scam",
+            "malware",
+            "vpn",
+            "twofactor",
+            "ransomware",
+            "firewall"
+        };
 
         public ChatBot()
         {
@@ -56,12 +69,59 @@ namespace CybersecurityChatbot
 
         private string BuildNormalResponse(string userInput)
         {
-            Sentiment sentiment = _sentiment.Detect(userInput);
+            string normalizedInput = userInput?.ToLowerInvariant() ?? string.Empty;
+            bool isFollowUpRequest = normalizedInput.Contains("tell me more") ||
+                                     normalizedInput.Contains("more details") ||
+                                     normalizedInput == "more";
+
+            string keywordsResponse;
+
+            if (isFollowUpRequest)
+            {
+                string currentTopic = _memory.Recall(CurrentTopicKey);
+                if (string.IsNullOrWhiteSpace(currentTopic))
+                {
+                    currentTopic = _memory.Recall("favouritetopic");
+                }
+
+                if (!string.IsNullOrWhiteSpace(currentTopic))
+                {
+                    keywordsResponse = _keywords.GetResponse(currentTopic);
+                }
+                else
+                {
+                    keywordsResponse = "Sorry, I don't have information on that topic. Please try asking about something else.";
+                }
+            }
+            else
+            {
+                keywordsResponse = _keywords.GetResponse(userInput ?? string.Empty);
+
+                string matchedTopic = GetMatchingTopic(normalizedInput);
+                if (!string.IsNullOrWhiteSpace(matchedTopic))
+                {
+                    _memory.Store(CurrentTopicKey, matchedTopic);
+                }
+            }
+
+            Sentiment sentiment = _sentiment.Detect(userInput ?? string.Empty);
             string sentimentResponse = _sentiment.GetSentimentResponse(sentiment);
-            string keywordsResponse = _keywords.GetResponse(userInput);
             string intro = BuildPersonalisedIntro();
 
             return CombineResponses(intro, sentimentResponse, keywordsResponse);
+        }
+
+        private static string GetMatchingTopic(string normalizedInput)
+        {
+            foreach (string keyword in TopicKeywords)
+            {
+                if (normalizedInput.Contains(keyword))
+                {
+                    return keyword;
+                }
+            }
+
+            return string.Empty;
         }
 
         public void InitialiseMemory(string userName, string favouriteTopic)

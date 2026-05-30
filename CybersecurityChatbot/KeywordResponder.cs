@@ -17,14 +17,14 @@ namespace CybersecurityChatbot
          * KeyType: Is a string representing the keyword to look for in user input (string)
          * ValueType: Is a list of strings representing possible responses for that keyword (List<string>)                                                  
          */
-        private Dictionary<string, List<string>> _responses; 
-        
+        private Dictionary<string, List<string>> _responses;
+
         /*
          * Random (built-in C#) method that randomly selects a response from the list using a keyword
          * Ensures the key does not return sane response all the time
          * Creates a new object and stores the reponse in _random
          */
-        private Random _random = new Random(); 
+        private Random _random = new Random();
 
         public KeywordResponder()
         {
@@ -123,22 +123,25 @@ namespace CybersecurityChatbot
         }
 
         /*
-         * Gets the keyword from the input and searches/iterates the dictionery for a response.
+         * Gets the keyword from the input and searches/iterates the dictionary for a response.
          * If a keyword is found, Random() selects one of the responses associated with that keyword and returns it.
          * If no keywords are found, it returns a default message.
          */
         public string GetResponse(string userInput)
         {
-            foreach (var keyword in _responses.Keys)
+            string lowerInput = userInput?.ToLowerInvariant() ?? string.Empty;
+
+            foreach (var entry in _responses)
             {
-                if (userInput.ToLower().Contains(keyword))                                                      //- Checks if the user input contains any of the keywords in the dictionary (case-insensitive)
+                if (lowerInput.Contains(entry.Key))
                 {
-                    var keyWordFound = _responses[keyword];                                                     //- Retrieves the list of responses associated with the found keyword from the dictionary
-                    int randomReply = _random.Next(keyWordFound.Count);                                         //- Generates a random response from the list of responses
-                    return keyWordFound[randomReply];                                                           //- Returns the randomly selected response to the caller
+                    var responses = entry.Value;
+                    int randomIndex = _random.Next(responses.Count);
+                    return responses[randomIndex];
                 }
             }
-            return "Sorry, I don't have information on that topic. Please try asking about something else.";    //-else statement if no keywords are found in the user input
+
+            return "Sorry, I don't have information on that topic. Please try asking about something else.";
         }
     }
 }
