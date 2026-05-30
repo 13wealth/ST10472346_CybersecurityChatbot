@@ -24,7 +24,11 @@ namespace CybersecurityChatbot
         }
         public string ProcessInput(string userInput)
         {
-            return _keywords.GetResponse(userInput);
+            Sentiment sentiment = _sentiment.Detect(userInput);                                                 //-Detect the sentiment of the user input using Detector() and store it in sentiment
+            String sentimentResponse = _sentiment.GetSentimentResponse(sentiment);                              //-Generate a response based on the detected sentiment
+            String keywordsResponse = _keywords.GetResponse(userInput);                                         //-Get a response based on the detected keywords in the user input
+            
+            return  sentimentResponse + "\n" + keywordsResponse;                                                 //-Generate a response based on the detected sentiment
         }
     }
 }

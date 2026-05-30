@@ -23,7 +23,8 @@ namespace CybersecurityChatbot
         public MainWindow()
         {
             InitializeComponent();
-            _chatbot = new ChatBot();
+
+            _chatbot = new ChatBot();                                                                           //-Initialise the chatbot instance to handle user interactions and generate responses
 
             UI.WelcomeMessage();                                                                                //-Static method from the console UI class to play the welcome sound
             UI.BotGreeting(message =>

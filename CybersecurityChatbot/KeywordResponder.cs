@@ -131,11 +131,11 @@ namespace CybersecurityChatbot
         {
             foreach (var keyword in _responses.Keys)
             {
-                if (userInput.ToLower().Contains(keyword))
+                if (userInput.ToLower().Contains(keyword))                                                      //- Checks if the user input contains any of the keywords in the dictionary (case-insensitive)
                 {
-                    var keyWordFound = _responses[keyword];
-                    int randomReply = _random.Next(keyWordFound.Count);
-                    return keyWordFound[randomReply];
+                    var keyWordFound = _responses[keyword];                                                     //- Retrieves the list of responses associated with the found keyword from the dictionary
+                    int randomReply = _random.Next(keyWordFound.Count);                                         //- Generates a random response from the list of responses
+                    return keyWordFound[randomReply];                                                           //- Returns the randomly selected response to the caller
                 }
             }
             return "Sorry, I don't have information on that topic. Please try asking about something else.";    //-else statement if no keywords are found in the user input
