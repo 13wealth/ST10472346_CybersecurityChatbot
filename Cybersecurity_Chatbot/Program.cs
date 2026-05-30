@@ -6,10 +6,10 @@ namespace Cybersecurity_Chatbot
     {
         static void Main(string[] args)
         {
-            Logo.AsciiLogo();                                                                                  //-Display the logo of the chatbot
-            UI.WelcomeMessage();                                                                               //-Start welcome sound in the background
-            UI.BotGreeting(Console.WriteLine);                                                                                  //-Display the bot's greeting
-            UI.GetUserData();                                                                                  //-Get user data while welcome audio is playing
+            Logo.AsciiLogo();                                                                                   //-Display the logo of the chatbot
+            UI.WelcomeMessage();                                                                                //-Start welcome sound in the background
+            UI.BotGreeting(Console.WriteLine);                                                                  //-Display the bot's greeting
+            UI.GetUserData();                                                                  //-Get user data while welcome audio is playing
 
             while (true)
             {

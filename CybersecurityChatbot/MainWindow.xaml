@@ -41,6 +41,12 @@
         <SolidColorBrush x:Key="BotBubbleBrush" Color="#163045"/>
         <SolidColorBrush x:Key="UserBubbleBrush" Color="#12B886"/>
         <SolidColorBrush x:Key="SidePanelBrush" Color="#165DA7"/>
+        <ImageBrush x:Key="ChatPanelBackgroundBrush"
+                ImageSource="pack://siteoforigin:,,,/assets/chat-bg.jpg"
+                Stretch="UniformToFill"
+                AlignmentX="Center"
+                AlignmentY="Center"/>
+        <SolidColorBrush x:Key="ChatPanelOverlayBrush" Color="#8A08111F"/>
 
     </Window.Resources>
 
@@ -228,7 +234,7 @@
 
         <Border Grid.Column="2"
                 x:Name="ChatPanelBorder"
-                Background="Transparent"
+            Background="{StaticResource ChatPanelBackgroundBrush}"
                 CornerRadius="24"
                 Padding="20"
                 Opacity="0"
@@ -237,7 +243,7 @@
                 <TranslateTransform X="180" x:Name="ChatSlideTransform"/>
             </Border.RenderTransform>
 
-            <Grid Background="Transparent">
+            <Grid Background="{StaticResource ChatPanelOverlayBrush}">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>

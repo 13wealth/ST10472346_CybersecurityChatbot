@@ -14,7 +14,15 @@ namespace CybersecurityChatbot
 {
     public partial class MainWindow : Window
     {
+        private enum ChatFlowState
+        {
+            AskingName,
+            AskingTopic,
+            Ready
+        }
+
         private ChatBot _chatbot;                                                                               //-Generate responses based on user input and chatbot logic
+        private ChatFlowState _chatFlowState = ChatFlowState.AskingName;
 
         /*
          * The constructor initializes the main window, sets up the UI, and loads any existing chat history.
@@ -24,8 +32,6 @@ namespace CybersecurityChatbot
         {
             InitializeComponent();
 
-            _chatbot = new ChatBot();                                                                           //-Initialise the chatbot instance to handle user interactions and generate responses
-
             UI.WelcomeMessage();                                                                                //-Static method from the console UI class to play the welcome sound
             UI.BotGreeting(message =>
             {
@@ -33,6 +39,9 @@ namespace CybersecurityChatbot
             });                                                                                                 //-Static method from the console UI class to display the bot's greeting in the console
 
             AsciiArtBlock.Text = Logo.GetAscii();                                                               //-Static method from the console Logo class to display the ASCII logo in the console        
+
+            _chatbot = new ChatBot();                                                                           //-Initialise the chatbot instance to handle user interactions and generate responses
+            AddBotMessage("What should I call you?");
         }
 
         private void OpenChatButton_Click(object sender, RoutedEventArgs e)
@@ -74,8 +83,27 @@ namespace CybersecurityChatbot
 
             AddUserMessage(userMessage);
 
-            string botReply = _chatbot.ProcessInput(userMessage);
-            AddBotMessage(botReply);
+            if (_chatFlowState == ChatFlowState.AskingName)
+            {
+                _chatbot.InitialiseMemory(userMessage, "");
+                _chatFlowState = ChatFlowState.AskingTopic;
+                AddBotMessage($"Thanks {userMessage}! And what's your favourite cybersecurity topic?");
+            }
+            else if (_chatFlowState == ChatFlowState.AskingTopic)
+            {
+                string currentName = _chatbot.GetStoredValue("username");
+                _chatbot.InitialiseMemory(currentName, userMessage);
+                _chatFlowState = ChatFlowState.Ready;
+                //AddBotMessage($"Thanks {currentName}. We can start chatting now.");
+
+                string botReply = _chatbot.ProcessInput(userMessage);
+                AddBotMessage(botReply);
+            }
+            else
+            {
+                string botReply = _chatbot.ProcessInput(userMessage);
+                AddBotMessage(botReply);
+            }
 
             MessageInput.Clear();
 
