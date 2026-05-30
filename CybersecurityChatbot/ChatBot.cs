@@ -2,14 +2,29 @@
 using System.Collections.Generic;
 using System.Text;
 
-/*
- * This class hold the core logic and functionality of the chatbot.
- * It handles user interactions, process input and generate responses.
- */
+
 namespace CybersecurityChatbot
 {
-    class ChatBot
+    /*
+     * This class hold the core logic and functionality of the chatbot.
+     * It handles user interactions, process input and generate responses.
+     */
+    public class ChatBot
     {
+        private KeywordResponder _keywords;
+        private SentimentDetector _sentiment;
+        private MemoryStore _memory;
 
+        public ChatBot()
+        {
+            _keywords = new KeywordResponder();                                                                 //-Initialize the responder to handle user input and provide responses based on keywords
+            _sentiment = new SentimentDetector();
+            _memory = new MemoryStore();
+
+        }
+        public string ProcessInput(string userInput)
+        {
+            return _keywords.GetResponse(userInput);
+        }
     }
 }

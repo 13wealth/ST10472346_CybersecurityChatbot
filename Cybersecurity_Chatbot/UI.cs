@@ -15,14 +15,16 @@ namespace Cybersecurity_Chatbot
         public static void BotGreeting(Action<string> output)
         {
             Console.ForegroundColor = ConsoleColor.Yellow;
-            output(" ");
-            output(" ");
-            output("************************************************************");
-            output("                   W   E   L   C   O   M   E                ");
-            output("************************************************************");
-            output(" ");
-            Console.ResetColor();
-            output("Bot: Hello human... I am a Cybersecurity Awareness Bot, here to help you stay safe online.\n");
+            string greeting =
+                                "\n\n" +
+                                "************************************************************\n" +
+                                "                               W   E   L   C   O   M   E                \n" +
+                                "************************************************************\n\n" +
+                                
+                                "Hello human... I am a Cybersecurity Awareness Bot, here to help you stay safe online.\n";
+
+                Console.ResetColor();
+            output(greeting);
         }
 
         public static void GetUserData()
@@ -50,12 +52,12 @@ namespace Cybersecurity_Chatbot
                 return;                                                                                         //-If it is not, skip the sound playback to avoid errors.
             }
 
-            try 
+            try
             {
                 welcomePlayer = new SoundPlayer("welcome.wav");                                                 //-Attempts to play a welcome sound when the chatbot starts
                 welcomePlayer.Play();                                                                           //-Plays the welcome sound asynchronously in the background
             }
-            catch (Exception a)                                                                                 
+            catch (Exception a)
             {
                 Console.WriteLine("Bot: Unable to play welcome sound," + a.Message);                            //-If the sound file is missing or cannot be played, it will catch the exception and display an error message
             }
@@ -65,7 +67,7 @@ namespace Cybersecurity_Chatbot
         {
             Console.WriteLine();                                                                                //-Adds a blank line for spacing
             string border = new string('*', 64);                                                                //-Creates a string of 64 asterisks to use as a border for the menu display
-            
+
             Console.ForegroundColor = ConsoleColor.Cyan;
             Console.WriteLine(border);
             Console.WriteLine("        C   H   A   T   B   O   T  -  M   E   N   U     ");
@@ -73,11 +75,11 @@ namespace Cybersecurity_Chatbot
 
             Console.WriteLine();                                                                                //-Adds a blank line for spacing
 
-        //-This will highlight only this line
+            //-This will highlight only this line
             Console.ForegroundColor = ConsoleColor.Green;
             TypeText("Choose a topic:\n");
 
-        //-Return the section colour for the rest of the items in the border 
+            //-Return the section colour for the rest of the items in the border 
             Console.ForegroundColor = ConsoleColor.Cyan;
             Console.WriteLine("1) Phishing emails");
             Console.WriteLine("2) Passwords");
