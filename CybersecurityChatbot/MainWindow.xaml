@@ -539,14 +539,28 @@
                         </Viewbox>
                     </Border>
 
-                    <Button Grid.Row="4"
-                            Content="Open Chat"
-                            HorizontalAlignment="Center"
-                            VerticalAlignment="Top"
-                            Width="160"
-                            Height="44"
-                            Style="{StaticResource OpenChatButtonStyle}"
-                            Click="OpenChatButton_Click"/>
+                    <Grid Grid.Row="4" HorizontalAlignment="Stretch" VerticalAlignment="Bottom" Margin="0,10,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="8"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <Button Grid.Column="0"
+                                Content="Open Chat"
+                                Height="44"
+                                Style="{StaticResource OpenChatButtonStyle}"
+                                Click="OpenChatButton_Click"
+                                MinWidth="96"
+                                HorizontalAlignment="Stretch"/>
+
+                        <Button Grid.Column="2"
+                                Content="🧠 Take Quiz"
+                                Height="44"
+                                Click="OpenQuizButton_Click"
+                                MinWidth="96"
+                                HorizontalAlignment="Stretch"/>
+                    </Grid>
                 </Grid>
             </Viewbox>
         </Border>
