@@ -124,6 +124,60 @@
                                         BotTemplate="{StaticResource BotMessageTemplate}"
                                         UserTemplate="{StaticResource UserMessageTemplate}"/>
 
+        <!-- Thin, minimal scrollbar styling (appears as a single thin line with small thumb) -->
+        <Style x:Key="TransparentRepeatButtonStyle" TargetType="RepeatButton">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RepeatButton">
+                        <Border Background="Transparent"/>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="ThinThumbStyle" TargetType="Thumb">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Thumb">
+                        <Border Background="#66D9E8" CornerRadius="3" SnapsToDevicePixels="True"/>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Global ScrollBar style so all scrollbars become slim lines -->
+        <Style TargetType="ScrollBar">
+            <Setter Property="Width" Value="6"/>
+            <Setter Property="Height" Value="6"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ScrollBar">
+                        <Grid Background="Transparent" SnapsToDevicePixels="True">
+                            <Track x:Name="PART_Track" IsDirectionReversed="False">
+                                <Track.DecreaseRepeatButton>
+                                    <RepeatButton Style="{StaticResource TransparentRepeatButtonStyle}"/>
+                                </Track.DecreaseRepeatButton>
+                                <Track.Thumb>
+                                    <Thumb Style="{StaticResource ThinThumbStyle}" />
+                                </Track.Thumb>
+                                <Track.IncreaseRepeatButton>
+                                    <RepeatButton Style="{StaticResource TransparentRepeatButtonStyle}"/>
+                                </Track.IncreaseRepeatButton>
+                            </Track>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Small helper: ensure ScrollViewers can be panned vertically with touch/mouse when available -->
+        <Style TargetType="ScrollViewer" x:Key="ThinScrollViewerStyle">
+            <Setter Property="PanningMode" Value="VerticalOnly"/>
+            <Setter Property="Background" Value="Transparent"/>
+        </Style>    
+
+
     </Window.Resources>
 
     <Grid Margin="16">
@@ -131,6 +185,7 @@
             <ColumnDefinition Width="1.05*" MinWidth="140"/>
             <ColumnDefinition Width="1.2*" MinWidth="180"/>
             <ColumnDefinition x:Name="ChatColumn" Width="0" MinWidth="0"/>
+            <ColumnDefinition x:Name="QuizColumn" Width="0" MinWidth="0"/>
         </Grid.ColumnDefinitions>
 
         <!-- ── Task Assistant Panel ── -->
@@ -243,91 +298,108 @@
                 CornerRadius="14"
                 Padding="8"
                 Margin="0,0,0,10">
-                    <ScrollViewer VerticalScrollBarVisibility="Auto">
-                        <ListBox x:Name="TaskListBox"
+                    <ListBox x:Name="TaskListBox"
+                         ScrollViewer.VerticalScrollBarVisibility="Hidden"
+                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                         ScrollViewer.PanningMode="VerticalOnly"
                          Background="Transparent"
                          BorderThickness="0"
                          Foreground="White"
                          FontSize="12"
                          SelectionMode="Single">
 
-                            <!-- How each task looks in the list -->
-                            <ListBox.ItemTemplate>
-                                <DataTemplate>
-                                    <Border Padding="8,6"
+                        <!-- How each task looks in the list -->
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Border Padding="8,6"
                                     Margin="0,3"
                                     Background="#14253A"
                                     CornerRadius="10">
-                                        <StackPanel>
+                                    <StackPanel>
 
-                                            <!-- Title row with status icon -->
-                                            <Grid>
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="*"/>
-                                                    <ColumnDefinition Width="Auto"/>
-                                                </Grid.ColumnDefinitions>
+                                        <!-- Title row with status icon -->
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
 
-                                                <TextBlock Grid.Column="0"
+                                            <TextBlock Grid.Column="0"
                                                    Text="{Binding Title}"
                                                    Foreground="White"
                                                    FontWeight="Bold"
                                                    FontSize="13"
                                                    TextWrapping="Wrap"/>
 
-                                                <!-- Shows tick if complete, square if pending -->
-                                                <TextBlock Grid.Column="1"
+                                            <!-- Shows tick if complete, square if pending -->
+                                            <TextBlock Grid.Column="1"
                                                    FontSize="13"
                                                    Margin="6,0,0,0">
-                                                    <TextBlock.Style>
-                                                        <Style TargetType="TextBlock">
-                                                            <Setter Property="Text" Value="🔲"/>
-                                                            <Style.Triggers>
-                                                                <DataTrigger Binding="{Binding IsComplete}" Value="True">
-                                                                    <Setter Property="Text" Value="✅"/>
-                                                                </DataTrigger>
-                                                            </Style.Triggers>
-                                                        </Style>
-                                                    </TextBlock.Style>
-                                                </TextBlock>
-                                            </Grid>
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Text" Value="🔲"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsComplete}" Value="True">
+                                                                <Setter Property="Text" Value="✅"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                        </Grid>
 
-                                            <!-- Description -->
-                                            <TextBlock Text="{Binding Description}"
+                                        <!-- Description -->
+                                        <TextBlock Text="{Binding Description}"
                                                Foreground="#A0B8D0"
                                                FontSize="11"
                                                TextWrapping="Wrap"
                                                Margin="0,3,0,0"/>
 
-                                            <!-- Reminder -->
-                                            <TextBlock Foreground="#66D9E8"
+                                        <!-- Reminder -->
+                                        <TextBlock Foreground="#66D9E8"
                                                FontSize="11"
                                                Margin="0,2,0,0">
                                         <Run Text="⏰ "/>
                                         <Run Text="{Binding Reminder}"/>
-                                            </TextBlock>
+                                        </TextBlock>
 
-                                        </StackPanel>
-                                    </Border>
-                                </DataTemplate>
-                            </ListBox.ItemTemplate>
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
 
-                            <!-- Removes the default blue highlight when a task is selected -->
-                            <ListBox.ItemContainerStyle>
-                                <Style TargetType="ListBoxItem">
-                                    <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
-                                    <Setter Property="Background" Value="Transparent"/>
-                                    <Setter Property="Template">
-                                        <Setter.Value>
-                                            <ControlTemplate TargetType="ListBoxItem">
+                        <!-- Removes the default blue highlight when a task is selected -->
+                        <ListBox.ItemContainerStyle>
+                            <Style TargetType="ListBoxItem">
+                                <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                                <Setter Property="Padding" Value="0"/>
+                                <Setter Property="Margin" Value="0"/>
+                                <Setter Property="Background" Value="Transparent"/>
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="ListBoxItem">
+                                            <Border x:Name="Bd" Background="{TemplateBinding Background}" CornerRadius="10" Padding="6" SnapsToDevicePixels="True">
                                                 <ContentPresenter/>
-                                            </ControlTemplate>
-                                        </Setter.Value>
-                                    </Setter>
-                                </Style>
-                            </ListBox.ItemContainerStyle>
+                                            </Border>
+                                            <ControlTemplate.Triggers>
+                                                <!-- Hover: subtle overlay to indicate interactivity -->
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter TargetName="Bd" Property="Background" Value="#2213C2C2"/>
+                                                    <Setter Property="Cursor" Value="Hand"/>
+                                                </Trigger>
 
-                        </ListBox>
-                    </ScrollViewer>
+                                                <!-- Selected: highlight with a royal orange accent (semi-opaque to preserve text readability) -->
+                                                <Trigger Property="IsSelected" Value="True">
+                                                    <Setter TargetName="Bd" Property="Background" Value="#66FF8C00"/>
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </ListBox.ItemContainerStyle>
+
+                    </ListBox>
                 </Border>
 
                 <!-- Mark Complete and Delete Buttons side by side -->
@@ -403,7 +475,7 @@
                                                     behaviors:SpinBehavior.SpinIntervalSeconds="5"
                           behaviors:SpinBehavior.SpinDurationSeconds="0.8">
                         <Grid x:Name="BotAvatarRoot">
-                                                        <Ellipse Fill="{StaticResource SidePanelBrush}"
+                            <Ellipse Fill="{StaticResource SidePanelBrush}"
                                      Width="160"
                                                                          Height="160"
                                                                          StrokeThickness="0"/>
@@ -479,6 +551,89 @@
             </Viewbox>
         </Border>
 
+        <Border Grid.Column="3"
+                x:Name="QuizPanelBorder"
+                Background="#071827"
+                CornerRadius="24"
+                Padding="20"
+                Opacity="0"
+                Visibility="Collapsed">
+            <Border.RenderTransform>
+                <TranslateTransform X="180" x:Name="QuizSlideTransform"/>
+            </Border.RenderTransform>
+
+            <Grid Background="#071827">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <Border Background="Transparent"
+                        CornerRadius="18"
+                        Padding="16"
+                        Margin="0,0,0,16">
+                    <Grid>
+                        <TextBlock Text="Quiz"
+                                   Foreground="White"
+                                   FontSize="20"
+                                   FontWeight="Bold"/>
+                        <Button Content="Close"
+                                Width="82"
+                                Height="32"
+                                HorizontalAlignment="Right"
+                                VerticalAlignment="Top"
+                                Click="CloseQuizButton_Click"/>
+                    </Grid>
+                </Border>
+
+                <Border Grid.Row="1"
+                        Background="Transparent"
+                        CornerRadius="20"
+                        Padding="16"
+                        Margin="0,0,0,16">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" Style="{StaticResource ThinScrollViewerStyle}">
+                        <StackPanel x:Name="QuestionPanel">
+                            <TextBlock x:Name="QuizProgressText" Foreground="White" FontSize="12" Margin="0,0,0,6"/>
+                            <TextBlock x:Name="QuizScoreText" Foreground="White" FontSize="12" Margin="0,0,0,6"/>
+                            <TextBlock x:Name="QuestionText" Foreground="White" FontSize="16" TextWrapping="Wrap" Margin="0,6,0,12"/>
+
+                            <StackPanel x:Name="MultipleChoicePanel" Margin="0,6,0,6">
+                                <RadioButton x:Name="OptionA" Content="Option A" GroupName="Options"/>
+                                <RadioButton x:Name="OptionB" Content="Option B" GroupName="Options"/>
+                                <RadioButton x:Name="OptionC" Content="Option C" GroupName="Options"/>
+                                <RadioButton x:Name="OptionD" Content="Option D" GroupName="Options"/>
+                            </StackPanel>
+
+                            <StackPanel x:Name="TrueFalsePanel" Margin="0,6,0,6" Visibility="Collapsed">
+                                <RadioButton x:Name="OptionTrue" Content="True" GroupName="TF"/>
+                                <RadioButton x:Name="OptionFalse" Content="False" GroupName="TF"/>
+                            </StackPanel>
+
+                            <Border x:Name="FeedbackBorder" Background="#14253A" CornerRadius="8" Padding="8" Visibility="Collapsed" Margin="0,8,0,8">
+                                <TextBlock x:Name="FeedbackText" Foreground="White"/>
+                            </Border>
+
+                            <!-- Results panel shown at end of quiz -->
+                            <StackPanel x:Name="ResultsPanel" Visibility="Collapsed" Margin="0,8,0,8">
+                                <TextBlock x:Name="FinalScoreText" Foreground="White" FontSize="18" FontWeight="Bold" Margin="0,6,0,4"/>
+                                <TextBlock x:Name="FinalMessageText" Foreground="#A0B8D0" FontSize="13" TextWrapping="Wrap"/>
+                            </StackPanel>
+
+                        </StackPanel>
+                    </ScrollViewer>
+                </Border>
+
+                <Border Grid.Row="2" Background="Transparent" CornerRadius="18" Padding="14">
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0" >
+                        <Button x:Name="SubmitAnswerButton" Content="Submit" Width="96" Height="36" Click="SubmitAnswerButton_Click"/>
+                        <Button x:Name="NextQuestionButton" Content="Next" Width="96" Height="36" Click="NextQuestionButton_Click" Visibility="Collapsed"/>
+                        <Button x:Name="PlayAgainButton" Content="Play Again" Width="96" Height="36" Click="PlayAgainButton_Click" Visibility="Collapsed"/>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Border>
+
         <Border Grid.Column="2"
                 x:Name="ChatPanelBorder"
                 Background="#0C1626"
@@ -520,9 +675,9 @@
                         CornerRadius="20"
                         Padding="16"
                         Margin="0,0,0,16">
-                    <ScrollViewer VerticalScrollBarVisibility="Hidden"
+                    <ScrollViewer VerticalScrollBarVisibility="Auto"
                                   HorizontalScrollBarVisibility="Disabled"
-                                  x:Name="ChatScroll">
+                                  x:Name="ChatScroll" Style="{StaticResource ThinScrollViewerStyle}">
                         <ItemsControl x:Name="ChatMessagesList"
                                       ItemsSource="{Binding Messages}"
                                       ItemTemplateSelector="{StaticResource ChatRoleTemplateSelector}">

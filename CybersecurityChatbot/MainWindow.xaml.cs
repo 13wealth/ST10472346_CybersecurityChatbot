@@ -18,7 +18,9 @@ namespace CybersecurityChatbot
     {
         private ChatBot _chatbot;
         private TaskManager _taskManager = new TaskManager();
+        private QuizManager _quizManager = new QuizManager();
         public ObservableCollection<ChatMessage> Messages { get; } = new ObservableCollection<ChatMessage>();
+        
 
         /*
          * The constructor initializes the main window, sets up the UI, and loads any existing chat history.
@@ -168,6 +170,13 @@ namespace CybersecurityChatbot
                 // Bubble 2 — menu
                 AppendBotMessage(_chatbot.GetMenuPrompt());
             }
+            // Check for a task added signal from the chatbot and refresh the task list automatically
+            else if (botReply.StartsWith("TASK_ADDED:"))
+            {
+                string message = botReply.Replace("TASK_ADDED:", "");
+                AppendBotMessage(message);
+                LoadTasksIntoList();
+            }
             else
             {
                 AppendBotMessage(botReply);
@@ -227,8 +236,8 @@ namespace CybersecurityChatbot
          */
         private void MarkCompleteButton_Click(object sender, RoutedEventArgs e)
         {
-            // Cast the selected item in the ListBox to a CyberTask object
-            CyberTask selectedTask = TaskListBox.SelectedItem as CyberTask;
+            // Cast the selected item in the ListBox to a CyberTask object (nullable)
+            CyberTask? selectedTask = TaskListBox.SelectedItem as CyberTask;
 
             // Nothing selected — ask the user to pick one first
             if (selectedTask == null)
@@ -250,7 +259,7 @@ namespace CybersecurityChatbot
          */
         private void DeleteTaskButton_Click(object sender, RoutedEventArgs e)
         {
-            CyberTask selectedTask = TaskListBox.SelectedItem as CyberTask;
+            CyberTask? selectedTask = TaskListBox.SelectedItem as CyberTask;
 
             if (selectedTask == null)
             {
@@ -263,6 +272,188 @@ namespace CybersecurityChatbot
 
             // Refresh the list so the deleted task disappears immediately
             LoadTasksIntoList();
+        }
+
+        /*********** QUIZ HANDLERS ***********/
+
+        /*
+         * Opens the quiz panel with a slide-in animation.
+         * Resets the quiz and loads the first question.
+         */
+        private void OpenQuizButton_Click(object sender, RoutedEventArgs e)
+        {
+            // Reset so the quiz always starts fresh
+            _quizManager.ResetQuiz();
+
+            // Show the panel with the same animation as the chat panel
+            QuizColumn.Width = new GridLength(1.75, GridUnitType.Star);
+            QuizPanelBorder.Visibility = Visibility.Visible;
+
+            QuizPanelBorder.BeginAnimation(OpacityProperty, new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(400)));
+            QuizSlideTransform.BeginAnimation(TranslateTransform.XProperty, new DoubleAnimation(180, 0, TimeSpan.FromMilliseconds(400)));
+
+            // Load the first question
+            LoadCurrentQuestion();
+        }
+
+        /*
+         * Closes the quiz panel.
+         */
+        private void CloseQuizButton_Click(object sender, RoutedEventArgs e)
+        {
+            QuizPanelBorder.Visibility = Visibility.Collapsed;
+            QuizPanelBorder.Opacity = 0;
+            QuizSlideTransform.X = 180;
+            QuizColumn.Width = new GridLength(0);
+        }
+
+        /*
+         * Loads the current question from QuizManager and displays it on screen.
+         * Switches between multiple choice and true/false layouts automatically.
+         */
+        private void LoadCurrentQuestion()
+        {
+            QuizQuestion question = _quizManager.GetCurrentQuestion();
+
+            // Update progress and score display
+            QuizProgressText.Text = _quizManager.GetQuestionProgress();
+            QuizScoreText.Text = _quizManager.GetCurrentScore();
+
+            // Show the question text
+            QuestionText.Text = question.Question;
+
+            // Hide feedback from the previous question
+            FeedbackBorder.Visibility = Visibility.Collapsed;
+            NextQuestionButton.Visibility = Visibility.Collapsed;
+            SubmitAnswerButton.Visibility = Visibility.Visible;
+
+            // Clear any previous selection
+            OptionA.IsChecked = false;
+            OptionB.IsChecked = false;
+            OptionC.IsChecked = false;
+            OptionD.IsChecked = false;
+            OptionTrue.IsChecked = false;
+            OptionFalse.IsChecked = false;
+
+            if (question.IsTrueFalse)
+            {
+                // Show True/False buttons, hide multiple choice
+                MultipleChoicePanel.Visibility = Visibility.Collapsed;
+                TrueFalsePanel.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                // Show multiple choice buttons, hide True/False
+                MultipleChoicePanel.Visibility = Visibility.Visible;
+                TrueFalsePanel.Visibility = Visibility.Collapsed;
+
+                // Set the text for each option from the question's options list
+                OptionA.Content = question.Options[0];
+                OptionB.Content = question.Options[1];
+                OptionC.Content = question.Options[2];
+                OptionD.Content = question.Options[3];
+            }
+        }
+
+        /*
+         * Called when the user clicks Submit Answer.
+         * Works out which option is selected, submits it to QuizManager,
+         * and displays the feedback.
+         */
+        private void SubmitAnswerButton_Click(object sender, RoutedEventArgs e)
+        {
+            QuizQuestion question = _quizManager.GetCurrentQuestion();
+            string selectedAnswer = "";
+
+            // Work out which radio button the user selected
+            if (question.IsTrueFalse)
+            {
+                if (OptionTrue.IsChecked == true) selectedAnswer = "True";
+                if (OptionFalse.IsChecked == true) selectedAnswer = "False";
+            }
+            else
+            {
+                if (OptionA.IsChecked == true) selectedAnswer = "A";
+                if (OptionB.IsChecked == true) selectedAnswer = "B";
+                if (OptionC.IsChecked == true) selectedAnswer = "C";
+                if (OptionD.IsChecked == true) selectedAnswer = "D";
+            }
+
+            // Make sure the user actually selected something
+            if (string.IsNullOrEmpty(selectedAnswer))
+            {
+                FeedbackBorder.Visibility = Visibility.Visible;
+                FeedbackText.Text = "⚠️ Please select an answer before submitting.";
+                return;
+            }
+
+            // Submit the answer to QuizManager and get back true or false
+            bool isCorrect = _quizManager.SubmitAnswer(selectedAnswer);
+
+            // Show the feedback
+            FeedbackBorder.Visibility = Visibility.Visible;
+            FeedbackText.Text = _quizManager.GetFeedback(isCorrect);
+
+            // Update the score display
+            QuizScoreText.Text = _quizManager.GetCurrentScore();
+
+            // Hide Submit, show Next (or results if finished)
+            SubmitAnswerButton.Visibility = Visibility.Collapsed;
+
+            if (_quizManager.IsFinished())
+            {
+                // Show the results screen after a short delay via Next button
+                NextQuestionButton.Content = "See Results ➡";
+                NextQuestionButton.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                NextQuestionButton.Visibility = Visibility.Visible;
+            }
+        }
+
+        /*
+         * Called when the user clicks Next Question.
+         * Either loads the next question or shows the results screen.
+         */
+        private void NextQuestionButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (_quizManager.IsFinished())
+            {
+                // Show the results screen
+                QuestionPanel.Visibility = Visibility.Collapsed;
+                ResultsPanel.Visibility = Visibility.Visible;
+                FeedbackBorder.Visibility = Visibility.Collapsed;
+
+                NextQuestionButton.Visibility = Visibility.Collapsed;
+                SubmitAnswerButton.Visibility = Visibility.Collapsed;
+                PlayAgainButton.Visibility = Visibility.Visible;
+
+                FinalScoreText.Text = _quizManager.GetFinalScore();
+                FinalMessageText.Text = _quizManager.GetFinalMessage();
+                QuizProgressText.Text = "Quiz Complete!";
+            }
+            else
+            {
+                // Load the next question
+                LoadCurrentQuestion();
+            }
+        }
+
+        /*
+         * Called when the user clicks Play Again.
+         * Resets the quiz and starts from question 1.
+         */
+        private void PlayAgainButton_Click(object sender, RoutedEventArgs e)
+        {
+            _quizManager.ResetQuiz();
+
+            // Hide results, show question panel
+            ResultsPanel.Visibility = Visibility.Collapsed;
+            QuestionPanel.Visibility = Visibility.Visible;
+            PlayAgainButton.Visibility = Visibility.Collapsed;
+
+            LoadCurrentQuestion();
         }
     }
 }

@@ -218,7 +218,8 @@ namespace CybersecurityChatbot
                         // No reminder — save the task with an empty reminder
                         _taskManager.AddTask(_pendingTitle, _pendingDescription, "");
                         _taskStep = TaskStep.None;
-                        return "✅ Task added: \"" + _pendingTitle + "\". No reminder set.\n\n" +
+                        // Signal MainWindow to refresh the UI by prefixing the response
+                        return "TASK_ADDED:✅ Task added: \"" + _pendingTitle + "\". No reminder set.\n\n" +
                                "Type \"view tasks\" to see all your tasks.";
                     }
 
@@ -227,7 +228,8 @@ namespace CybersecurityChatbot
                     string reminder = input.Trim();
                     _taskManager.AddTask(_pendingTitle, _pendingDescription, reminder);
                     _taskStep = TaskStep.None;
-                    return "✅ Task added: \"" + _pendingTitle + "\".\n\n" +
+                    // Signal MainWindow to refresh the UI by prefixing the response
+                    return "TASK_ADDED:✅ Task added: \"" + _pendingTitle + "\".\n\n" +
                            "Got it! I'll remind you — " + reminder + ".\n\n" +
                            "Type \"view tasks\" to see all your tasks.";
 

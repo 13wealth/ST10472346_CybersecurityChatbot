@@ -177,8 +177,8 @@ namespace CybersecurityChatbot.Behaviors
             rotateTransform.BeginAnimation(RotateTransform.AngleProperty, spin);
         }
 
-        private static SpinState GetState(DependencyObject obj) => (SpinState)obj.GetValue(StateProperty);
-        private static void SetState(DependencyObject obj, SpinState value) => obj.SetValue(StateProperty, value);
+        private static SpinState? GetState(DependencyObject obj) => (SpinState?)obj.GetValue(StateProperty);
+        private static void SetState(DependencyObject obj, SpinState? value) => obj.SetValue(StateProperty, value);
 
         private sealed class SpinState
         {
