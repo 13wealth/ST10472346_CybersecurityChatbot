@@ -31,11 +31,7 @@
         </Style>
 
         <Style x:Key="OpenChatButtonStyle" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
-            <Style.Triggers>
-                <DataTrigger Binding="{Binding Visibility, ElementName=ChatPanelBorder}" Value="Visible">
-                    <Setter Property="Visibility" Value="Collapsed"/>
-                </DataTrigger>
-            </Style.Triggers>
+            <!-- Keep Open Chat button always visible so users can access it regardless of other panels. -->
         </Style>
 
         <SolidColorBrush x:Key="BotBubbleBrush" Color="#163045"/>
@@ -555,7 +551,7 @@
                                 HorizontalAlignment="Stretch"/>
 
                         <Button Grid.Column="2"
-                                Content="🧠 Take Quiz"
+                                Content="Take Quiz"
                                 Height="44"
                                 Click="OpenQuizButton_Click"
                                 MinWidth="96"
@@ -567,7 +563,7 @@
 
         <Border Grid.Column="3"
                 x:Name="QuizPanelBorder"
-                Background="#071827"
+                Background="#DCDCDC"
                 CornerRadius="24"
                 Padding="20"
                 Opacity="0"
@@ -576,7 +572,7 @@
                 <TranslateTransform X="180" x:Name="QuizSlideTransform"/>
             </Border.RenderTransform>
 
-            <Grid Background="#071827">
+            <Grid Background="#DCDCDC">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
@@ -589,7 +585,7 @@
                         Margin="0,0,0,16">
                     <Grid>
                         <TextBlock Text="Quiz"
-                                   Foreground="White"
+                                   Foreground="#071018"
                                    FontSize="20"
                                    FontWeight="Bold"/>
                         <Button Content="Close"
@@ -608,9 +604,9 @@
                         Margin="0,0,0,16">
                     <ScrollViewer VerticalScrollBarVisibility="Auto" Style="{StaticResource ThinScrollViewerStyle}">
                         <StackPanel x:Name="QuestionPanel">
-                            <TextBlock x:Name="QuizProgressText" Foreground="White" FontSize="12" Margin="0,0,0,6"/>
-                            <TextBlock x:Name="QuizScoreText" Foreground="White" FontSize="12" Margin="0,0,0,6"/>
-                            <TextBlock x:Name="QuestionText" Foreground="White" FontSize="16" TextWrapping="Wrap" Margin="0,6,0,12"/>
+                            <TextBlock x:Name="QuizProgressText" Foreground="#071018" FontSize="12" Margin="0,0,0,6"/>
+                            <TextBlock x:Name="QuizScoreText" Foreground="#071018" FontSize="12" Margin="0,0,0,6"/>
+                            <TextBlock x:Name="QuestionText" Foreground="#071018" FontSize="16" TextWrapping="Wrap" Margin="0,6,0,12"/>
 
                             <StackPanel x:Name="MultipleChoicePanel" Margin="0,6,0,6">
                                 <RadioButton x:Name="OptionA" Content="Option A" GroupName="Options"/>
@@ -650,7 +646,7 @@
 
         <Border Grid.Column="2"
                 x:Name="ChatPanelBorder"
-                Background="#0C1626"
+                Background="#DCDCDC"
                 CornerRadius="24"
                 Padding="20"
                 Opacity="0"
@@ -659,20 +655,20 @@
                 <TranslateTransform X="180" x:Name="ChatSlideTransform"/>
             </Border.RenderTransform>
 
-            <Grid Background="{StaticResource ChatPanelOverlayBrush}">
+            <Grid Background="#DCDCDC">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
 
-                <Border Background="Transparent"
+                <Border Background="#DCDCDC"
                         CornerRadius="18"
                         Padding="16"
                         Margin="0,0,0,16">
                     <Grid>
                         <TextBlock Text="Chat"
-                                   Foreground="White"
+                                   Foreground="Black"
                                    FontSize="20"
                                    FontWeight="Bold"/>
                         <Button Content="Close"
@@ -715,14 +711,14 @@
                         </Grid.ColumnDefinitions>
 
                         <Border Grid.Column="0"
-                                Background="#0C1626"
+                                Background="#1E88FF"
                                 CornerRadius="14"
                                 Padding="10"
                                 VerticalAlignment="Center"
                                 Margin="0,0,12,0">
                             <TextBox x:Name="MessageInput"
                                      BorderThickness="0"
-                                     Background="Transparent"
+                                     Background="#1E88FF"
                                      Foreground="White"
                                      CaretBrush="White"
                                      FontSize="14"
