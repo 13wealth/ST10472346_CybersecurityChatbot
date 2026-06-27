@@ -10,15 +10,15 @@ using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Threading;
 using System.Threading.Tasks;
-using Cybersecurity_Chatbot;                                                                                    //- Import the console namespace to access it properties and methods
+using Cybersecurity_Chatbot;
 
 namespace CybersecurityChatbot
 {
     public partial class MainWindow : Window
     {
+        private ChatBot _chatbot;
+        private TaskManager _taskManager = new TaskManager();
         public ObservableCollection<ChatMessage> Messages { get; } = new ObservableCollection<ChatMessage>();
-
-        private ChatBot _chatbot;                                                                               //-Generate responses based on user input and chatbot logic
 
         /*
          * The constructor initializes the main window, sets up the UI, and loads any existing chat history.
@@ -29,16 +29,21 @@ namespace CybersecurityChatbot
             InitializeComponent();
             DataContext = this;
 
-            UI.WelcomeMessage();                                                                                //-Static method from the console UI class to play the welcome sound
+            UI.WelcomeMessage();
             UI.BotGreeting(message =>
             {
                 AppendBotMessage(message);
-            });                                                                                                 //-Static method from the console UI class to display the bot's greeting in the console
+            });
 
-            AsciiArtBlock.Text = Logo.GetAscii();                                                               //-Static method from the console Logo class to display the ASCII logo in the console        
+            AsciiArtBlock.Text = Logo.GetAscii();
 
-            _chatbot = new ChatBot();                                                                           //-Initialise the chatbot instance to handle user interactions and generate responses
-            AppendBotMessage(_chatbot.ProcessInput(""));                                                        //- Start the conversation by processing an empty input to trigger the initial prompt from the chatbot
+            _chatbot = new ChatBot();
+
+            // Load any saved tasks from tasks.json into the list when the app opens
+            // This satisfies the READ operation — tasks must appear on startup
+            LoadTasksIntoList();
+
+            AppendBotMessage(_chatbot.ProcessInput(""));
         }
 
 
@@ -49,7 +54,6 @@ namespace CybersecurityChatbot
             HandleUserMessage();
         }
 
-
         private void MessageInput_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.Key == Key.Enter)
@@ -58,7 +62,6 @@ namespace CybersecurityChatbot
                 e.Handled = true;
             }
         }
-
 
         private void OpenChatButton_Click(object sender, RoutedEventArgs e)
         {
@@ -81,15 +84,18 @@ namespace CybersecurityChatbot
             Messages.Add(typing);
             ScrollToLatestMessage();
 
-            // Estimate typing duration based on message length (min 700ms, capped)
+            // Estimate typing duration based on message length (min 700ms, capped at 3000ms)
             int baseMs = 700;
             int perCharMs = 25;
             int delay = Math.Min(3000, baseMs + (Math.Max(0, message?.Length ?? 0) * perCharMs));
 
             await Task.Delay(delay);
 
-            // Remove the typing indicator (the most recent typing entry)
-            var lastTyping = Messages.LastOrDefault(m => string.Equals(m.Role, "Bot", StringComparison.OrdinalIgnoreCase) && m.Text == "__typing__");
+            // Remove the typing indicator
+            var lastTyping = Messages.LastOrDefault(m =>
+                string.Equals(m.Role, "Bot", StringComparison.OrdinalIgnoreCase) &&
+                m.Text == "__typing__");
+
             if (lastTyping != null)
             {
                 Messages.Remove(lastTyping);
@@ -132,12 +138,12 @@ namespace CybersecurityChatbot
         }
 
 
-        //───CONVERSATION HANDLERS──────────────────────────────────────────────────────────────────────────────────
+        /*********** CONVERSATION HANDLERS ***********/
 
         /*
          * Handles a single user submission from the input box.
-         * It validates input, displays the user bubble, runs chatbot processing and then displays the bot bubble.
-         * The flow of the conversation is managed based on the current state of the chat flow (asking for name, topic, or ready).
+         * Validates input, displays the user bubble, processes through chatbot,
+         * then displays the bot response bubble.
          */
         private void HandleUserMessage()
         {
@@ -168,6 +174,95 @@ namespace CybersecurityChatbot
             }
 
             MessageInput.Clear();
+        }
+
+
+        /*********** TASK ASSISTANT GUI HANDLERS ***********/
+
+        /*
+         * Reads tasks.json and populates the TaskListBox on screen.
+         * Called on startup so saved tasks always appear when the app opens.
+         * Also called after every add, complete, or delete to keep the list up to date.
+         */
+        private void LoadTasksIntoList()
+        {
+            List<CyberTask> tasks = _taskManager.GetAllTasks();
+            TaskListBox.ItemsSource = null;     // Clear first to force a refresh
+            TaskListBox.ItemsSource = tasks;    // Bind the updated list to the GUI
+        }
+
+        /*
+         * Called when the user clicks Add Task.
+         * Reads the three input fields, adds the task, then refreshes the list.
+         */
+        private void AddTaskButton_Click(object sender, RoutedEventArgs e)
+        {
+            string title = TaskTitleInput.Text.Trim();
+            string description = TaskDescriptionInput.Text.Trim();
+            string reminder = TaskReminderInput.Text.Trim();
+
+            // Title is required — warn the user if it is empty
+            if (string.IsNullOrWhiteSpace(title))
+            {
+                AppendBotMessage("⚠️ Please enter a task title before adding.");
+                return;
+            }
+
+            // Add the task and show the confirmation in the chat
+            string confirmation = _taskManager.AddTask(title, description, reminder);
+            AppendBotMessage(confirmation);
+
+            // Clear the input fields ready for the next task
+            TaskTitleInput.Text = "";
+            TaskDescriptionInput.Text = "";
+            TaskReminderInput.Text = "";
+
+            // Refresh the list so the new task appears immediately
+            LoadTasksIntoList();
+        }
+
+        /*
+         * Called when the user clicks Mark Complete.
+         * Gets the selected task from the list and marks it as done in the file.
+         */
+        private void MarkCompleteButton_Click(object sender, RoutedEventArgs e)
+        {
+            // Cast the selected item in the ListBox to a CyberTask object
+            CyberTask selectedTask = TaskListBox.SelectedItem as CyberTask;
+
+            // Nothing selected — ask the user to pick one first
+            if (selectedTask == null)
+            {
+                AppendBotMessage("⚠️ Please select a task from the list first.");
+                return;
+            }
+
+            _taskManager.MarkAsComplete(selectedTask.Id);
+            AppendBotMessage("✅ \"" + selectedTask.Title + "\" marked as complete!");
+
+            // Refresh the list so the tick icon updates on screen immediately
+            LoadTasksIntoList();
+        }
+
+        /*
+         * Called when the user clicks Delete.
+         * Gets the selected task from the list and removes it permanently.
+         */
+        private void DeleteTaskButton_Click(object sender, RoutedEventArgs e)
+        {
+            CyberTask selectedTask = TaskListBox.SelectedItem as CyberTask;
+
+            if (selectedTask == null)
+            {
+                AppendBotMessage("⚠️ Please select a task from the list first.");
+                return;
+            }
+
+            _taskManager.DeleteTask(selectedTask.Id);
+            AppendBotMessage("🗑️ \"" + selectedTask.Title + "\" has been deleted.");
+
+            // Refresh the list so the deleted task disappears immediately
+            LoadTasksIntoList();
         }
     }
 }

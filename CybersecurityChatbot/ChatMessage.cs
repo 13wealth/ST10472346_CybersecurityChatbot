@@ -12,10 +12,11 @@ namespace CybersecurityChatbot
         {
         }
 
-        public ChatMessage(string role, string text)
+        // Accept nullable text and guard against null to satisfy nullable reference checks.
+        public ChatMessage(string role, string? text)
         {
             Role = role;
-            Text = text;
+            Text = text ?? string.Empty;
             Timestamp = DateTime.Now;
         }
     }
