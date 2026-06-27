@@ -1,10 +1,11 @@
 ﻿using System;
+using System.IO;
 using System.Media;
 
 namespace Cybersecurity_Chatbot
 {
     /**
-     * UI class handles all user interactions, including displaying messages, menus, and prompts. 
+     * UI class handles all user interactions, including displaying messages, menus, and prompts.
      * It also manages the welcome sound and validates user input for continuing the conversation.
      * Changed the class from internal to public to allow access from the WPF application
      */
@@ -17,13 +18,12 @@ namespace Cybersecurity_Chatbot
             Console.ForegroundColor = ConsoleColor.Yellow;
             string greeting =
                                 "\n\n" +
-                                "************************************************************\n" +
-                                "                               W   E   L   C   O   M   E                \n" +
-                                "************************************************************\n\n" +
-                                
+                                "******************************\n" +
+                                "   W   E   L   C   O   M   E  \n" +
+                                "******************************\n\n" +
                                 "Hello human... I am a Cybersecurity Awareness Bot, here to help you stay safe online.\n";
 
-                Console.ResetColor();
+            Console.ResetColor();
             output(greeting);
         }
 
@@ -54,7 +54,8 @@ namespace Cybersecurity_Chatbot
 
             try
             {
-                welcomePlayer = new SoundPlayer("welcome.wav");                                                 //-Attempts to play a welcome sound when the chatbot starts
+                string soundFile = File.Exists("welcome.wav") ? "welcome.wav" : "assets\\welcome.wav";
+                welcomePlayer = new SoundPlayer(soundFile);                                                     //-Attempts to play the welcome sound when the chatbot starts
                 welcomePlayer.Play();                                                                           //-Plays the welcome sound asynchronously in the background
             }
             catch (Exception a)
@@ -90,14 +91,6 @@ namespace Cybersecurity_Chatbot
             Console.ResetColor();                                                                               //-Resets the console color to default after displaying the menu
         }
 
-
-        /*
-         * Reusable method to display text with a typing effect.
-         * Making the chatbot's responses feel more dynamic and engaging.
-         * @param text The text to display.
-         * @param delay The delay in milliseconds between each character (default is 40ms).
-         * Threading logic assisted by ChatGPT to create a typing effect for the chatbot's responses.
-         */
         public static void TypeText(string text, int delay = 40)
         {
             foreach (char a in text)                                                                            //-Iterates through each character in the input text

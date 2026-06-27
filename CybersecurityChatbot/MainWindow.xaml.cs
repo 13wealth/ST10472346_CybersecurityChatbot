@@ -9,6 +9,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Threading;
+using System.Threading.Tasks;
 using Cybersecurity_Chatbot;                                                                                    //- Import the console namespace to access it properties and methods
 
 namespace CybersecurityChatbot
@@ -41,7 +42,7 @@ namespace CybersecurityChatbot
         }
 
 
-/******************************** UI EVENT HANDLERS *******************************/
+        /*********** UI EVENT HANDLERS ************/
 
         private void SendButton_Click(object sender, RoutedEventArgs e)
         {
@@ -65,7 +66,7 @@ namespace CybersecurityChatbot
         }
 
 
-/******************************* UI DISPLAY HANDLERS *******************************/
+        /*********** UI DISPLAY HANDLERS ***********/
 
         private void AppendUserMessage(string message)
         {
@@ -73,12 +74,32 @@ namespace CybersecurityChatbot
             ScrollToLatestMessage();
         }
 
-        private void AppendBotMessage(string message)
+        private async void AppendBotMessage(string message)
         {
+            // Show typing indicator as a temporary message
+            var typing = new ChatMessage("Bot", "__typing__");
+            Messages.Add(typing);
+            ScrollToLatestMessage();
+
+            // Estimate typing duration based on message length (min 700ms, capped)
+            int baseMs = 700;
+            int perCharMs = 25;
+            int delay = Math.Min(3000, baseMs + (Math.Max(0, message?.Length ?? 0) * perCharMs));
+
+            await Task.Delay(delay);
+
+            // Remove the typing indicator (the most recent typing entry)
+            var lastTyping = Messages.LastOrDefault(m => string.Equals(m.Role, "Bot", StringComparison.OrdinalIgnoreCase) && m.Text == "__typing__");
+            if (lastTyping != null)
+            {
+                Messages.Remove(lastTyping);
+            }
+
+            // Add the real bot message
             Messages.Add(new ChatMessage("Bot", message));
             ScrollToLatestMessage();
         }
-       
+
         private void ScrollToLatestMessage()
         {
             Dispatcher.BeginInvoke(DispatcherPriority.Background, new Action(() =>
@@ -88,7 +109,7 @@ namespace CybersecurityChatbot
         }
 
 
-/******************************* UI ANIMATION HANDLERS *******************************/
+        /*********** UI ANIMATION HANDLERS ***********/
 
         private void OpenChatPanel()
         {
@@ -111,6 +132,7 @@ namespace CybersecurityChatbot
         }
 
 
+        //───CONVERSATION HANDLERS──────────────────────────────────────────────────────────────────────────────────
 
         /*
          * Handles a single user submission from the input box.
@@ -121,18 +143,31 @@ namespace CybersecurityChatbot
         {
             string userMessage = MessageInput.Text.Trim();
 
-            if (string.IsNullOrWhiteSpace(userMessage))                                                         //- Validate that the user has entered a message before processing
+            if (string.IsNullOrWhiteSpace(userMessage))
                 return;
 
             AppendUserMessage(userMessage);
 
             string botReply = _chatbot.ProcessInput(userMessage);
-            AppendBotMessage(botReply);                                                                         //- Process the user input through the chatbot and display the response
 
-            MessageInput.Clear();                                                                               //- Clear the input box after processing the message
-        }  
+            // Check if onboarding just finished
+            if (botReply.StartsWith("ONBOARDING_COMPLETE:"))
+            {
+                // Extract the topic the user typed
+                string topic = botReply.Replace("ONBOARDING_COMPLETE:", "");
 
+                // Bubble 1 — topic response
+                AppendBotMessage(_chatbot.GetFavouriteTopic(topic));
+
+                // Bubble 2 — menu
+                AppendBotMessage(_chatbot.GetMenuPrompt());
+            }
+            else
+            {
+                AppendBotMessage(botReply);
+            }
+
+            MessageInput.Clear();
+        }
     }
 }
-
-

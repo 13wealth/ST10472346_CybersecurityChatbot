@@ -1,5 +1,4 @@
-﻿
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.DirectoryServices;
@@ -14,7 +13,7 @@ namespace CybersecurityChatbot
      *   the tasks from memory back to the file.
      * All file operations are kept here and nowhere else.
      */
-    internal class TaskStorageHelper
+    public class TaskStorageHelper
     {
         private const string FilePath = "tasks.json";                                                           // The path to the tasks.json file. It is a constant because it does not change.
 
@@ -22,7 +21,7 @@ namespace CybersecurityChatbot
          * Reads task.json and deserialises it into a List of CyberTask Objects
          * If the file does not exists, returns an empty list.
          */
-        public List<CyberTask> LoadTasks() 
+        public List<CyberTask> LoadTasks()
         {
             try
             {
@@ -32,19 +31,19 @@ namespace CybersecurityChatbot
                 }
 
                 string fileContents = File.ReadAllText(FilePath);                                               // If the file exists, read the contents into a string
-                List<CyberTask> json = JsonConvert.DeserializeObject<List<CyberTask>>(fileContents);            // Deserialize the string into a List of CyberTask objects
-                
-                if (json == null)
+                List<CyberTask> json = JsonConvert.DeserializeObject<List<CyberTask>>(fileContents) ?? new List<CyberTask>();
+
+                if (json.Count == 0)
                 {
-                    return new List<CyberTask>();                                                               // If the deserialization fails, return an empty object
+                    return new List<CyberTask>();                                                               // If no tasks were found, return an empty object
                 }
 
                 return json;                                                                                    // Else, return the list of tasks
             }
 
-            catch (Exception ex) 
+            catch (Exception ex)
             {
-                Console.WriteLine($"Error loading tasks: " + ex.Message); 
+                Console.WriteLine($"Error loading tasks: " + ex.Message);
                 return new List<CyberTask>();                                                                   // If there is an error, return an empty list
             }
         }
@@ -54,14 +53,14 @@ namespace CybersecurityChatbot
          * Serializes a List of CyberTask objects into a JSON string and writes it to tasks.json.
          * If the file does not exist, it will be created.
          */
-        public void SaveTasks(List<CyberTask> tasks) 
+        public void SaveTasks(List<CyberTask> tasks)
         {
-            try 
+            try
             {
                 string json = JsonConvert.SerializeObject(tasks, Formatting.Indented);                          // Serialize the object into a JSON string and apply indentation for readability
                 File.WriteAllText(FilePath, json);                                                              // Write the JSON string to the file
             }
-            
+
             catch (Exception ex)
             {
                 Console.WriteLine($"Error saving tasks: " + ex.Message);
@@ -87,9 +86,9 @@ namespace CybersecurityChatbot
                  */
                 int newId;                                                                                      // Declares a variable to hold the new task ID
 
-                if(tasks.Count == 0)                                                                                                                  
+                if (tasks.Count == 0)
                 {
-                    newId = 1;                                                                              
+                    newId = 1;
                 }
                 else
                 {
@@ -104,13 +103,13 @@ namespace CybersecurityChatbot
                  * The new task's CreatedAt property is set to the current date and time
                  */
                 CyberTask newTask = new CyberTask();
-                
+
                 newTask.Id = newId;
                 newTask.Title = title;
                 newTask.Description = description;
                 newTask.Reminder = reminder;
-                newTask.IsCompleted = false;
-                newTask.CreatedAt = DateTime.Now.ToString("yyyy-mm-dd HH:mm");
+                newTask.IsComplete = false;
+                newTask.CreatedAt = DateTime.Now.ToString("yyyy-MM-dd HH:mm");
 
                 tasks.Add(newTask);                                                                             // Step 4: Add the new task to the list
 
@@ -131,7 +130,7 @@ namespace CybersecurityChatbot
          */
         public void MarkAsCompleted(int id)
         {
-            try 
+            try
             {
                 List<CyberTask> tasks = LoadTasks();                                                            // Step 1: Call LoadTasks to get the current list of tasks
 
@@ -140,11 +139,11 @@ namespace CybersecurityChatbot
                  * Check if the current task's ID matches the provided ID
                  * Step 3: Mark the task as completed
                  */
-                foreach (CyberTask task in tasks)                                                           
+                foreach (CyberTask task in tasks)
                 {
-                    if (task.Id == id)                                                                      
+                    if (task.Id == id)
                     {
-                        task.IsCompleted = true;                                                            
+                        task.IsComplete = true;
                         break;                                                                                  // Exit the loop once the task is found and marked as completed
                     }
                 }
