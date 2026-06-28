@@ -1,16 +1,17 @@
-﻿using System;
+﻿using Cybersecurity_Chatbot;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Media;
 using System.Linq;
+using System.Media;
+using System.Reflection.Metadata;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Threading;
-using System.Threading.Tasks;
-using Cybersecurity_Chatbot;
 
 namespace CybersecurityChatbot
 {
@@ -35,28 +36,29 @@ namespace CybersecurityChatbot
             UI.BotGreeting(message =>
             {
                 AppendBotMessage(message);
-            });
+            });                                                                         // Display the bot's greetin message in the chat window
 
-            AsciiArtBlock.Text = Logo.GetAscii();
+            AsciiArtBlock.Text = Logo.GetAscii();                                       // Display the ASCII art logo in the designated TextBlock
 
-            _chatbot = new ChatBot();
+            _chatbot = new ChatBot();                                                   // Initialize the chatbot instance
 
-            // Load any saved tasks from tasks.json into the list when the app opens
-            // This satisfies the READ operation — tasks must appear on startup
-            LoadTasksIntoList();
+            LoadTasksIntoList();                                                        // Load any existing tasks from the tasks.json file into the list box
 
-            AppendBotMessage(_chatbot.ProcessInput(""));
+            Dispatcher.BeginInvoke(DispatcherPriority.Background, new Action(async () =>
+            {
+                await Task.Delay(3000);                                                 // Wait for Welcome message to complete
+                AppendBotMessage(_chatbot.ProcessInput(""));
+            }));                                                                        // Start the onboarding process after a short delay
         }
 
 
-        /*********** UI EVENT HANDLERS ************/
-
+        // ── UI Event Handlers ─────────────────────────────────────────────────
         private void SendButton_Click(object sender, RoutedEventArgs e)
         {
             HandleUserMessage();
         }
 
-        private void MessageInput_KeyDown(object sender, KeyEventArgs e)
+        private void MessageInput_KeyDown(object sender, KeyEventArgs e)                // Handles the Enter key press in the message input box
         {
             if (e.Key == Key.Enter)
             {
@@ -65,14 +67,13 @@ namespace CybersecurityChatbot
             }
         }
 
-        private void OpenChatButton_Click(object sender, RoutedEventArgs e)
+        private void OpenChatButton(object sender, RoutedEventArgs e)
         {
             OpenChatPanel();
         }
 
 
-        /*********** UI DISPLAY HANDLERS ***********/
-
+        // ── UI Display Handlers ─────────────────────────────────────────────────
         private void AppendUserMessage(string message)
         {
             Messages.Add(new ChatMessage("User", message));
@@ -81,34 +82,30 @@ namespace CybersecurityChatbot
 
         private async void AppendBotMessage(string message)
         {
-            // Show typing indicator as a temporary message
-            var typing = new ChatMessage("Bot", "__typing__");
+            var typing = new ChatMessage("Bot", "__typing__");                          // Show typing indicator as a temporary message
             Messages.Add(typing);
             ScrollToLatestMessage();
 
-            // Estimate typing duration based on message length (min 700ms, capped at 3000ms)
             int baseMs = 700;
             int perCharMs = 25;
             int delay = Math.Min(3000, baseMs + (Math.Max(0, message?.Length ?? 0) * perCharMs));
 
-            await Task.Delay(delay);
+            await Task.Delay(delay);                                                    // Wait for the typing indicator to simulate a realistic response time
 
-            // Remove the typing indicator
             var lastTyping = Messages.LastOrDefault(m =>
                 string.Equals(m.Role, "Bot", StringComparison.OrdinalIgnoreCase) &&
                 m.Text == "__typing__");
 
-            if (lastTyping != null)
+            if (lastTyping != null)                                                     // Remove the typing indicator before adding the actual bot message
             {
                 Messages.Remove(lastTyping);
             }
 
-            // Add the real bot message
-            Messages.Add(new ChatMessage("Bot", message));
+            Messages.Add(new ChatMessage("Bot", message));                              // Add the real bot message
             ScrollToLatestMessage();
         }
 
-        private void ScrollToLatestMessage()
+        private void ScrollToLatestMessage()                                            // Scrolls the chat window to the latest message after a new message is added
         {
             Dispatcher.BeginInvoke(DispatcherPriority.Background, new Action(() =>
             {
@@ -117,9 +114,8 @@ namespace CybersecurityChatbot
         }
 
 
-        /*********** UI ANIMATION HANDLERS ***********/
-
-        private void OpenChatPanel()
+        // ── UI Animation Handlers ─────────────────────────────────────────────────
+        private void OpenChatPanel()                                                // Opens the chat panel with a slide-in animation
         {
             if (ChatPanelBorder.Visibility == Visibility.Visible)
                 return;
@@ -131,7 +127,7 @@ namespace CybersecurityChatbot
             ChatSlideTransform.BeginAnimation(TranslateTransform.XProperty, new DoubleAnimation(180, 0, TimeSpan.FromMilliseconds(400)));
         }
 
-        private void CloseChatButton_Click(object sender, RoutedEventArgs e)
+        private void CloseChatButton_Click(object sender, RoutedEventArgs e)        // Closes the chat panel with a slide-out animation
         {
             ChatPanelBorder.Visibility = Visibility.Collapsed;
             ChatPanelBorder.Opacity = 0;
@@ -140,8 +136,7 @@ namespace CybersecurityChatbot
         }
 
 
-        /*********** CONVERSATION HANDLERS ***********/
-
+        // ── UI Conversation Handlers ─────────────────────────────────────────────────
         /*
          * Handles a single user submission from the input box.
          * Validates input, displays the user bubble, processes through chatbot,
@@ -158,20 +153,25 @@ namespace CybersecurityChatbot
 
             string botReply = _chatbot.ProcessInput(userMessage);
 
-            // Check if onboarding just finished
-            if (botReply.StartsWith("ONBOARDING_COMPLETE:"))
+            if (botReply.StartsWith("ONBOARDING_COMPLETE:"))                          // Check if onboarding just finished
             {
-                // Extract the topic the user typed
-                string topic = botReply.Replace("ONBOARDING_COMPLETE:", "");
+                
+                string topic = botReply.Replace("ONBOARDING_COMPLETE:", "");          // Extract the topic from the bot's reply
+                string favTopicMessage = _chatbot.GetFavouriteTopic(topic);           // Bubble 1 — topic response (Thank you {name}... + explanation)
+                AppendBotMessage(favTopicMessage);
 
-                // Bubble 1 — topic response
-                AppendBotMessage(_chatbot.GetFavouriteTopic(topic));
+                int baseMs = 700;
+                int perCharMs = 25;
+                int delay = Math.Min(3000, baseMs + (Math.Max(0, favTopicMessage?.Length ?? 0) * perCharMs));
 
-                // Bubble 2 — menu
-                AppendBotMessage(_chatbot.GetMenuPrompt());
+                Dispatcher.BeginInvoke(DispatcherPriority.Background, new Action(async () =>
+                {
+                    await Task.Delay(delay);
+                    AppendBotMessage(_chatbot.GetMenuPrompt());
+                }));                                                                    // Bubble 2 — menu prompt (What would you like to do next? + options)
             }
-            // Check for a task added signal from the chatbot and refresh the task list automatically
-            else if (botReply.StartsWith("TASK_ADDED:"))
+            
+            else if (botReply.StartsWith("TASK_ADDED:"))                                // Check if a task was just added
             {
                 string message = botReply.Replace("TASK_ADDED:", "");
                 AppendBotMessage(message);
@@ -179,15 +179,14 @@ namespace CybersecurityChatbot
             }
             else
             {
-                AppendBotMessage(botReply);
+                AppendBotMessage(botReply);                                             // Regular bot response
             }
 
             MessageInput.Clear();
         }
 
 
-        /*********** TASK ASSISTANT GUI HANDLERS ***********/
-
+        // ── UI Task Assistant Handlers ─────────────────────────────────────────────────
         /*
          * Reads tasks.json and populates the TaskListBox on screen.
          * Called on startup so saved tasks always appear when the app opens.
@@ -274,8 +273,7 @@ namespace CybersecurityChatbot
             LoadTasksIntoList();
         }
 
-        /*********** QUIZ HANDLERS ***********/
-
+        // ── UI Quiz Handlers ─────────────────────────────────────────────────
         /*
          * Opens the quiz panel with a slide-in animation.
          * Resets the quiz and loads the first question.
@@ -320,19 +318,18 @@ namespace CybersecurityChatbot
             QuizScoreText.Text = _quizManager.GetCurrentScore();
 
             // Show the question text
-            QuestionText.Text = question.Question;
+            QuestionText.Text = question.Question;                                      // Display the question text in the designated TextBlock
 
             // Hide feedback from the previous question
             FeedbackBorder.Visibility = Visibility.Collapsed;
             NextQuestionButton.Visibility = Visibility.Collapsed;
             SubmitAnswerButton.Visibility = Visibility.Visible;
 
-            // Clear any previous selection
-            OptionA.IsChecked = false;
+            OptionA.IsChecked = false;                                                  // Clear all radio buttons to ensure no previous selection is carried over
             OptionB.IsChecked = false;
             OptionC.IsChecked = false;
             OptionD.IsChecked = false;
-            OptionTrue.IsChecked = false;
+            OptionTrue.IsChecked = false;                                               // Clear True/False selection
             OptionFalse.IsChecked = false;
 
             if (question.IsTrueFalse)
@@ -387,8 +384,7 @@ namespace CybersecurityChatbot
                 return;
             }
 
-            // Submit the answer to QuizManager and get back true or false
-            bool isCorrect = _quizManager.SubmitAnswer(selectedAnswer);
+            bool isCorrect = _quizManager.SubmitAnswer(selectedAnswer);                 // Submit the answer to QuizManager and get back true or false
 
             // Show the feedback
             FeedbackBorder.Visibility = Visibility.Visible;

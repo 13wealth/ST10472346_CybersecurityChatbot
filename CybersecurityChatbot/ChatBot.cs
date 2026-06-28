@@ -17,6 +17,7 @@ namespace CybersecurityChatbot
         private readonly MemoryStore _memory;
         private bool _hasShownInitialPrompt;
         private bool _hasShownPersonalisedIntro;
+        private int _onboardingStep = 0;                                                // Track onboarding step: 0=intro, 1=name, 2=topic, 3+=done
         private const string CurrentTopicKey = "currenttopic";
         private static readonly string[] TopicKeywords =
         {
@@ -31,19 +32,18 @@ namespace CybersecurityChatbot
             "firewall"
         };
 
-        // TaskManager handles the four CRUD operations
-        private readonly TaskManager _taskManager = new TaskManager();
+        
+        private readonly TaskManager _taskManager = new TaskManager();                      // Task manager instance for handling tasks
+        private readonly ActivityLogger _activityLogger = new ActivityLogger();             // Activity logger instance for logging actions
+        private bool _showingFullLog = false;                                               // Track if we're viewing full log
 
-        // ── NEW: ActivityLogger field ─────────────────────────────────────────────
-        private readonly ActivityLogger _activityLogger = new ActivityLogger();
-        private bool _showingFullLog = false;  // Track if we're viewing full log
-
+        
         // ── Task chat flow fields ─────────────────────────────────────────────────
 
         private enum TaskStep
         {
             None,
-            AwaitingTitle,
+            AwaitingTitle,                                                                  //The bot is waiting for the user to provide a title for the task.
             AwaitingDescription,
             AwaitingRemindYesNo,
             AwaitingReminder
@@ -53,6 +53,7 @@ namespace CybersecurityChatbot
         private string _pendingTitle = "";
         private string _pendingDescription = "";
 
+        
         // ── NLP Intent fields ─────────────────────────────────────────────────────
 
         /*
@@ -170,30 +171,32 @@ namespace CybersecurityChatbot
         public string ProcessInput(string userInput)
         {
             // Onboarding Step 1: Show the first prompt asking for the user's name
-            if (!_hasShownInitialPrompt)
+            if (_onboardingStep == 0)
             {
-                _hasShownInitialPrompt = true;
-                return "⚙️ Onboarding (1 of 2)\n\n" +
+                _onboardingStep++;
+                return "Onboarding (1 of 2)\n\n" +
                        "What should I call you?";
             }
 
             // Onboarding Step 2: Store the name and ask for the favourite topic
-            if (string.IsNullOrWhiteSpace(_memory.Recall("username")))
+            if (_onboardingStep == 1)
             {
                 InitialiseMemory(userInput, string.Empty);
-                return "⚙️ Onboarding (2 of 2)\n\n" +
+                _onboardingStep++;
+                return "Onboarding (2 of 2)\n\n" +
                        $"Nice to meet you, {userInput}!\n\n" +
                        "What is your favourite cybersecurity topic?\n" +
                        "(e.g. passwords, phishing, malware, vpn, firewall)";
             }
 
             // Onboarding Step 3: Store the favourite topic and signal MainWindow
-            if (string.IsNullOrWhiteSpace(_memory.Recall("favouritetopic")))
+            if (_onboardingStep == 2)
             {
                 string currentName = _memory.Recall("username");
                 string safeInput = userInput ?? string.Empty;
 
                 InitialiseMemory(currentName, safeInput);
+                _onboardingStep++;
                 return "ONBOARDING_COMPLETE:" + safeInput;
             }
 
@@ -208,13 +211,7 @@ namespace CybersecurityChatbot
 
             // ── Step 4: NLP Intent Detection ─────────────────────────────────────
             /*
-             * Convert input to lowercase once and check it against every intent group.
-             * DetectIntent() scans the IntentPhrases dictionary and returns the
-             * matching intent name, or an empty string if nothing matches.
-             *
-             * This runs BEFORE the existing keyword logic so natural language
-             * phrasings like "remind me to update my password" are caught here
-             * instead of falling through to the keyword responder.
+             * DetectIntent() checks the user's input against predefined phrases for each intent.
              */
             string lower = (userInput ?? string.Empty).ToLower();
             string intent = DetectIntent(lower);
@@ -273,9 +270,6 @@ namespace CybersecurityChatbot
          * DetectIntent() loops through every intent group in IntentPhrases.
          * For each group it checks if the input contains any of the listed phrases.
          * Returns the intent name (e.g. "add_task") or empty string if no match.
-         *
-         * This is the NLP simulation — no external library needed.
-         * It works the same way as the keyword responder from Parts 1 and 2.
          */
         private string DetectIntent(string lowerInput)
         {

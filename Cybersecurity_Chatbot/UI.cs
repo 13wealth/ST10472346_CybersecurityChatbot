@@ -27,21 +27,37 @@ namespace Cybersecurity_Chatbot
             output(greeting);
         }
 
-        public static void GetUserData()
+        public static void GetUserName()
         {
             TypeText("Bot: What should I call you? \nYou: ");
             string name = Console.ReadLine();
-
-            if (string.IsNullOrWhiteSpace(name))                                                                //-If user doesn't enter a name, assign a default name
+            if (string.IsNullOrWhiteSpace(name))
             {
-                name = "User";                                                                                  //-Default name if user doesn't provide one
+                name = "User";
             }
-
-            StateSharing.Name = name;                                                                           //-Store the user's name in a shared state for use throughout the chatbot's responses
-
+            StateSharing.Name = name;
             Console.WriteLine();
-            TypeText("Bot: Nice to meet you, " + name + "! \n");
-            TypeText("Bot: Please type a topic name, number (1-4), or 'exit'\n");
+            TypeText($"Bot: Nice to meet you, {name}!\n");
+            Console.WriteLine();
+        }
+
+        public static void OnboardingIntro()
+        {
+            TypeText("Bot: Let me get to know you with two quick questions.\n");
+            Console.WriteLine();
+        }
+
+        public static void GetFavoriteTopic()
+        {
+            TypeText("Bot: What is your favorite cybersecurity topic?\nYou: ");
+            string topic = Console.ReadLine();
+            if (string.IsNullOrWhiteSpace(topic))
+            {
+                topic = "cybersecurity";
+            }
+            StateSharing.FavoriteTopic = topic;
+            Console.WriteLine();
+            TypeText($"Bot: Thank you {StateSharing.Name}, as someone interested in {topic}, here's what I can help you with...\n");
             Console.WriteLine();
         }
 

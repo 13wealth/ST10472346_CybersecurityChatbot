@@ -9,7 +9,9 @@ namespace Cybersecurity_Chatbot
             Logo.AsciiLogo();                                                                                   //-Display the logo of the chatbot
             UI.WelcomeMessage();                                                                                //-Start welcome sound in the background
             UI.BotGreeting(Console.WriteLine);                                                                  //-Display the bot's greeting
-            UI.GetUserData();                                                                  //-Get user data while welcome audio is playing
+            UI.OnboardingIntro();                                                                               //-Display onboarding intro bubble
+            UI.GetUserName();                                                                                   //-Ask for user's name
+            UI.GetFavoriteTopic();                                                                              //-Ask for favorite topic and show thank you/menu intro
 
             while (true)
             {

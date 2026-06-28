@@ -10,7 +10,6 @@
         Height="720"
         Width="1180"
         Background="#08111F">
-
     <Window.Resources>
         <Style TargetType="Button">
             <Setter Property="Background" Value="#13C2C2"/>
@@ -546,7 +545,7 @@
                                 Content="Open Chat"
                                 Height="44"
                                 Style="{StaticResource OpenChatButtonStyle}"
-                                Click="OpenChatButton_Click"
+                                Click="OpenChatButton"
                                 MinWidth="96"
                                 HorizontalAlignment="Stretch"/>
 
