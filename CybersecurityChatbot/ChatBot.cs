@@ -11,7 +11,6 @@ namespace CybersecurityChatbot
      */
     public class ChatBot
     {
-        // ── Existing fields ───────────────────────────────────────────────────────
         private readonly KeywordResponder _keywords;
         private readonly SentimentDetector _sentiment;
         private readonly MemoryStore _memory;
@@ -31,45 +30,34 @@ namespace CybersecurityChatbot
             "ransomware",
             "firewall"
         };
-
-        
-        private readonly TaskManager _taskManager = new TaskManager();                      // Task manager instance for handling tasks
-        private readonly ActivityLogger _activityLogger = new ActivityLogger();             // Activity logger instance for logging actions
-        private bool _showingFullLog = false;                                               // Track if we're viewing full log
-
-        
-        // ── Task chat flow fields ─────────────────────────────────────────────────
-
+        private readonly TaskManager _taskManager = new TaskManager();                  // Task manager instance for handling tasks
+        private readonly ActivityLogger _activityLogger = new ActivityLogger();         // Activity logger instance for logging actions
+        private bool _showingFullLog = false;                                           // Track if we're viewing full log
         private enum TaskStep
         {
             None,
-            AwaitingTitle,                                                                  //The bot is waiting for the user to provide a title for the task.
+            AwaitingTitle,                                                               // The bot is waiting for the user to provide a title for the task.
             AwaitingDescription,
             AwaitingRemindYesNo,
             AwaitingReminder
-        }
-
+        }                                                                                // Enum to track the current step in the add_task creation flow (states)
         private TaskStep _taskStep = TaskStep.None;
         private string _pendingTitle = "";
         private string _pendingDescription = "";
+        private Dictionary<string, Func<string, string>> _intentHandlers;               // Dictionary mapping intent names to their handler functions
 
-        
+
         // ── NLP Intent fields ─────────────────────────────────────────────────────
 
         /*
          * These dictionaries map intent names to lists of phrases.
          * If the user's input contains ANY of these phrases, the intent is detected.
          * Using a Dictionary makes it easy to add more phrases later.
-         *
-         * This is the same approach used in Parts 1 and 2 for keyword responses —
-         * just with string.Contains() checks grouped by intent category.
          */
-        private static readonly Dictionary<string, List<string>> IntentPhrases =
-            new Dictionary<string, List<string>>
+        private static readonly Dictionary<string, List<string>> IntentPhrases = new Dictionary<string, List<string>>                                        // Creates an empty dictionary to hold intent names and their associated phrases
         {
             {
-                // Intent: user wants to add a task
-                "add_task", new List<string>
+                "add_task", new List<string>                                            // Intent: user wants to add a task
                 {
                     "add task",
                     "add a task",
@@ -83,8 +71,8 @@ namespace CybersecurityChatbot
                 }
             },
             {
-                // Intent: user wants to set a reminder
-                "set_reminder", new List<string>
+                
+                "set_reminder", new List<string>                                        // Intent: user wants to set a reminder
                 {
                     "remind me",
                     "reminder",
@@ -97,9 +85,8 @@ namespace CybersecurityChatbot
                     "alert me"
                 }
             },
-            {
-                // Intent: user wants to take the quiz
-                "start_quiz", new List<string>
+            {             
+                "start_quiz", new List<string>                                          // Intent: user wants to take the quiz
                 {
                     "start quiz",
                     "take quiz",
@@ -113,8 +100,7 @@ namespace CybersecurityChatbot
                 }
             },
             {
-                // Intent: user wants to see the activity log
-                "show_log", new List<string>
+                "show_log", new List<string>                                            // Intent: user wants to view the activity log
                 {
                     "show activity log",
                     "what have you done",
@@ -125,12 +111,12 @@ namespace CybersecurityChatbot
                     "what actions",
                     "show me the log",
                     "history",
-                    "show more"
+                    "show more",
+                    "view log"
                 }
             },
-            {
-                // Intent: user wants to view their tasks
-                "view_tasks", new List<string>
+            {         
+                "view_tasks", new List<string>                                          // Intent: user wants to view their tasks
                 {
                     "view tasks",
                     "show tasks",
@@ -145,22 +131,29 @@ namespace CybersecurityChatbot
         };
 
 
-        // ── Constructor ───────────────────────────────────────────────────────────
-
+        /*
+         * The constructor initializes the chatbot's components.
+         * It sets up the keyword responder, sentiment detector, intents and memory store.
+         * It also initializes flags for onboarding and personalised intro.
+         */
         public ChatBot()
         {
-            _keywords = new KeywordResponder();
-            _sentiment = new SentimentDetector();
+            _keywords = new KeywordResponder();                                             // Initialize the keyword responder for handling topic-based responses
+            _sentiment = new SentimentDetector();                                           // Initialize the sentiment detector for analyzing user input sentiment
             _memory = new MemoryStore();
             _hasShownInitialPrompt = false;
+            _intentHandlers = new Dictionary<string, Func<string, string>>                  // Creates an empty dictionary to hold key: intent_names and value: handler function/methods
+            {
+                { "add_task",     HandleAddTaskIntent },                                    // Needs user input so we pass it directly to the handler
+                { "set_reminder", HandleSetReminderIntent }, 
+                { "view_tasks",   _ =>ChatViewTasks() },                                        // Does not need user input so we ignore it with _
+                { "show_log",     _ => HandleShowLogIntent() },
+                { "start_quiz",   _ => "OPEN_QUIZ: Let's test your cybersecurity knowledge!" }, 
+            };
         }
-
-
-        // ── ProcessInput ──────────────────────────────────────────────────────────
 
         /*
          * ProcessInput handles the full conversation flow step by step.
-         *
          * Step 1: Onboarding — ask for name
          * Step 2: Onboarding — ask for favourite topic
          * Step 3: Signal MainWindow that onboarding is done
@@ -170,101 +163,91 @@ namespace CybersecurityChatbot
          */
         public string ProcessInput(string userInput)
         {
-            // Onboarding Step 1: Show the first prompt asking for the user's name
-            if (_onboardingStep == 0)
+            try
             {
-                _onboardingStep++;
-                return "Onboarding (1 of 2)\n\n" +
-                       "What should I call you?";
-            }
+                if (userInput == null)                                                      // Check if userInput is null
+                {
+                    userInput = string.Empty;                                               // If null, set it to an empty string to avoid exceptions
+                }
+                
+                string lower = userInput.ToLower();                                             // Convert the user input to lowercase for case-insensitive matching
+                string intent = DetectIntent(lower);
 
-            // Onboarding Step 2: Store the name and ask for the favourite topic
-            if (_onboardingStep == 1)
+                if (_onboardingStep == 0)                                                   // Onboarding Step 1: Show the first prompt asking for the user's name
+                {
+                    _onboardingStep++;                                                      // Increment to step 1 for the next input
+                    return "Onboarding (1 of 2)\n\n" +
+                           "What should I call you?";
+                }
+
+                if (_onboardingStep == 1)                                                   // Onboarding Step 2: Store the name and ask for the favourite topic
+                {
+                    InitialiseMemory(userInput, string.Empty);                              // Store the username in memory with an empty favourite topic
+                    _onboardingStep++;
+                    return "Onboarding (2 of 2)\n\n" +
+                           $"Nice to meet you, {userInput}!\n\n" +
+                           "What is your favourite cybersecurity topic?\n" +
+                           "(e.g. passwords, phishing, malware, vpn, firewall)";
+                }
+
+                if (_onboardingStep == 2)                                                   // Onboarding Step 3: Store the favourite topic and signal MainWindow
+                {
+                    string currentName = _memory.Recall("username");                        // Retrieve the stored username
+
+                    InitialiseMemory(currentName, userInput);                               // Store the favourite topic in memory
+                    _onboardingStep++;
+                    return "ONBOARDING_COMPLETE:" + userInput;                              // Signal MainWindow that onboarding is complete and pass the favourite topic
+                }
+
+                /*
+                 * Step 4: NLP intent detection — runs BEFORE keyword/sentiment logic
+                 * If an intent is detected, we look it up in the _intentHandlers dictionary.
+                 * If a handler exists, we call it and return its response.
+                 */
+                if (_intentHandlers.TryGetValue(intent, out var handler))                   // Checks if key exists and gives value: out handler
+                {
+                    _activityLogger.Log(
+                                            "NLP recognised intent: '" +
+                                            intent +
+                                            "' from: '" +
+                                            userInput +
+                                            "'"
+                                       );
+                    return handler(userInput);
+                }
+
+                /*
+                 * Step 5: Task flow continuation if mid-flow
+                 * Tracks states if task creation is in progress
+                 * This helps the bots memory to know what to expect next from the user
+                 * Without this, the bot would treat the next input from "add task" as a 
+                 *  normal input and not know that it is part of the task creation flow/.
+                 */
+                if (_taskStep != TaskStep.None)                                             
+                {
+                    return ContinueTaskFlow(userInput);                                     
+                }
+
+                if (lower.Contains("complete task"))
+                {
+                    return ChatCompleteTask(userInput);
+                }
+
+                if (lower.Contains("delete task"))
+                {
+                    return ChatDeleteTask(userInput);
+                }
+
+                return BuildNormalResponse(userInput);                                  // Step 6: Else fall through to existing keyword and sentiment logic
+            }
+            catch (Exception ex)                                                        // Log the exception for debugging purposes
             {
-                InitialiseMemory(userInput, string.Empty);
-                _onboardingStep++;
-                return "Onboarding (2 of 2)\n\n" +
-                       $"Nice to meet you, {userInput}!\n\n" +
-                       "What is your favourite cybersecurity topic?\n" +
-                       "(e.g. passwords, phishing, malware, vpn, firewall)";
+                _activityLogger.Log("Error in ProcessInput: " + ex.Message);
+                return "Oops! Something went wrong while processing your input. " +
+                       "Please try again.";
             }
-
-            // Onboarding Step 3: Store the favourite topic and signal MainWindow
-            if (_onboardingStep == 2)
-            {
-                string currentName = _memory.Recall("username");
-                string safeInput = userInput ?? string.Empty;
-
-                InitialiseMemory(currentName, safeInput);
-                _onboardingStep++;
-                return "ONBOARDING_COMPLETE:" + safeInput;
-            }
-
-            // ── Onboarding complete ───────────────────────────────────────────────
-
-            // If the user is mid-flow adding a task, continue that flow first
-            // We check this before NLP so mid-flow answers are not misread as intents
-            if (_taskStep != TaskStep.None)
-            {
-                return ContinueTaskFlow(userInput ?? string.Empty);
-            }
-
-            // ── Step 4: NLP Intent Detection ─────────────────────────────────────
-            /*
-             * DetectIntent() checks the user's input against predefined phrases for each intent.
-             */
-            string lower = (userInput ?? string.Empty).ToLower();
-            string intent = DetectIntent(lower);
-
-            if (intent == "add_task")
-            {
-                // LOG: NLP recognised task intent
-                _activityLogger.Log("NLP recognised task intent from: '" + userInput + "'");
-                return HandleAddTaskIntent(userInput ?? string.Empty);
-            }
-
-            if (intent == "set_reminder")
-            {
-                // LOG: NLP recognised reminder intent
-                _activityLogger.Log("NLP recognised task intent from: '" + userInput + "'");
-                return HandleSetReminderIntent(userInput ?? string.Empty);
-            }
-
-            if (intent == "start_quiz")
-            {
-                // LOG: Quiz started
-                _activityLogger.Log("Quiz started");
-                // Signal MainWindow to open the quiz panel
-                return "OPEN_QUIZ:Let's test your cybersecurity knowledge! Opening the quiz now... 🧠";
-            }
-
-            if (intent == "show_log")
-            {
-                return HandleShowLogIntent();
-            }
-
-            if (intent == "view_tasks")
-            {
-                return ViewTasksForChat();
-            }
-
-            // ── Step 5: Existing task commands (kept for backward compatibility) ──
-            if (lower.Contains("complete task"))
-            {
-                return CompleteTaskFromChat(userInput ?? string.Empty);
-            }
-
-            if (lower.Contains("delete task"))
-            {
-                return DeleteTaskFromChat(userInput ?? string.Empty);
-            }
-
-            // ── Step 6: Fall through to existing keyword and sentiment logic ──────
-            return BuildNormalResponse(userInput ?? string.Empty);
         }
 
-
-        // ── NLP Intent Detection ──────────────────────────────────────────────────
 
         /*
          * DetectIntent() loops through every intent group in IntentPhrases.
@@ -273,193 +256,147 @@ namespace CybersecurityChatbot
          */
         private string DetectIntent(string lowerInput)
         {
-            // Loop through each intent group in the dictionary
-            foreach (KeyValuePair<string, List<string>> intent in IntentPhrases)
+            foreach (KeyValuePair<string, List<string>> intent in IntentPhrases)        // Loop through dictionary first
             {
                 string intentName = intent.Key;
                 List<string> phrases = intent.Value;
 
-                // Check each phrase in the group
-                foreach (string phrase in phrases)
+                foreach (string phrase in phrases)                                      // Then check each phrase in the group
                 {
                     if (lowerInput.Contains(phrase))
                     {
-                        return intentName; // Return as soon as we find a match
+                        return intentName;                                              // Return as soon as we find a match
                     }
                 }
             }
 
-            return string.Empty; // No intent matched
+            return string.Empty;                                                        // Else return empty string if no intent matched
         }
+
+        // ── NPL phrases handlers ───────────────────────────────────────────────
 
         /*
          * Handles the "add task" intent.
-         * Tries to extract a task title from the user's message using string manipulation.
-         *
-         * Examples:
-         *   "Add a task to enable two-factor authentication"
-         *     → extracts "enable two-factor authentication"
-         *   "I need to review my privacy settings"
-         *     → extracts "review my privacy settings"
-         *   "add task" (nothing after it)
-         *     → falls back to the normal step-by-step flow
+         * Extracts a task title from the user's message using string manipulation.
          */
         private string HandleAddTaskIntent(string userInput)
         {
-            string lower = userInput.ToLower();
-            string extractedTitle = "";
-
-            // Try to extract the task description from common patterns
-            // We strip the trigger phrase and use what comes after it as the title
-
-            if (lower.Contains("add a task to"))
-                extractedTitle = ExtractAfter(userInput, "add a task to");
-
-            else if (lower.Contains("add task to"))
-                extractedTitle = ExtractAfter(userInput, "add task to");
-
-            else if (lower.Contains("create a task to"))
-                extractedTitle = ExtractAfter(userInput, "create a task to");
-
-            else if (lower.Contains("create task to"))
-                extractedTitle = ExtractAfter(userInput, "create task to");
-
-            else if (lower.Contains("i need to"))
-                extractedTitle = ExtractAfter(userInput, "i need to");
-
-            else if (lower.Contains("i want to"))
-                extractedTitle = ExtractAfter(userInput, "i want to");
-
-            else if (lower.Contains("set up"))
-                extractedTitle = ExtractAfter(userInput, "set up");
-
-            else if (lower.Contains("enable"))
-                extractedTitle = ExtractAfter(userInput, "enable");
-
-            // If we extracted a title, add the task immediately
-            if (!string.IsNullOrWhiteSpace(extractedTitle))
+            List<string> extractionPhrases = new List<string>
             {
-                // Capitalise the first letter of the extracted title
-                string title = char.ToUpper(extractedTitle[0]) + extractedTitle.Substring(1);
+                "add a task to",
+                "add task to",
+                "create a task to",
+                "create task to",
+                "i need to",
+                "i want to",
+                "set up",
+                "enable"
+            };
 
-                _taskManager.AddTask(title, "", "");
+            string extractedTitle = ExtractFromPhrases(userInput, extractionPhrases);
 
-                // LOG: Task added
-                _activityLogger.Log("Task added: '" + title + "' (Reminder set for 5 days from now)");
-
-                return "TASK_ADDED:✅ Task added: \"" + title + "\".\n\n" +
-                       "Would you like to set a reminder for this task? (Yes / No)";
+            if (string.IsNullOrWhiteSpace(extractedTitle))
+            {
+                _taskStep = TaskStep.AwaitingTitle;
+                return "Sure! What would you like to call this task? (Enter a title)";
             }
 
-            // No title could be extracted — fall back to the step-by-step flow
-            _taskStep = TaskStep.AwaitingTitle;
-            return "Sure! What would you like to call this task? (Enter a title)";
+            _taskManager.AddTask(extractedTitle, "", "");
+            _activityLogger.Log($"Task added: {extractedTitle}.");
+
+            return $"TASK_ADDED: Task added: {extractedTitle}.\n\n" +
+                   "Would you like to set a reminder for this task? (Yes / No)";
         }
+
 
         /*
          * Handles the "set reminder" intent.
          * Extracts what to be reminded about and when from the user's message.
-         *
-         * Examples:
-         *   "Remind me to update my password tomorrow"
-         *     → task: "Update my password", reminder: "tomorrow"
-         *   "Remind me to enable 2FA in 3 days"
-         *     → task: "Enable 2FA", reminder: "in 3 days"
          */
         private string HandleSetReminderIntent(string userInput)
         {
-            string lower = userInput.ToLower();
-            string taskTitle = "";
-            string reminder = "";
+            string extractedTitle = ExtractFromPhrases(
+                                                        userInput, 
+                                                        IntentPhrases["set_reminder"]
+                                                       );                               // Extracts the reminder title from the user's input using ExtractFromPhrases
 
-            // Extract what comes after "remind me to"
-            if (lower.Contains("remind me to"))
+            /*if (string.IsNullOrWhiteSpace(extractedTitle))
+                return "What would you like me to remind you about?";
+            */
+            string[] timeWords = { 
+                                    "tomorrow", 
+                                    "today", 
+                                    "tonight", 
+                                    "in ", 
+                                    "next ", 
+                                    "on " 
+                                };                                                      // Array of time-related words to look for in the extracted title
+            string taskTitle = extractedTitle;
+            string reminder = "No specific time set";                                   // Default reminder if no time-related words are found
+
+            foreach (string timeWord in timeWords)                                      // Loop through the timeWords array to find a match
             {
-                string afterRemindMeTo = ExtractAfter(userInput, "remind me to");
+                int index = extractedTitle.ToLower().IndexOf(timeWord);
+                if (index == -1) continue;                                              // If the time word is not found, continue to the next iteration
 
-                // Try to split on time words to separate task from reminder
-                string[] timeWords = { " tomorrow", " today", " tonight",
-                                       " in ", " next ", " on " };
-
-                foreach (string timeWord in timeWords)
-                {
-                    if (afterRemindMeTo.ToLower().Contains(timeWord.Trim()))
-                    {
-                        int timeIndex = afterRemindMeTo.ToLower().IndexOf(timeWord.Trim());
-
-                        taskTitle = afterRemindMeTo.Substring(0, timeIndex).Trim();
-                        reminder = afterRemindMeTo.Substring(timeIndex).Trim();
-                        break;
-                    }
-                }
-
-                // If no time word was found, use the whole thing as the task
-                if (string.IsNullOrWhiteSpace(taskTitle))
-                {
-                    taskTitle = afterRemindMeTo.Trim();
-                    reminder = "No specific time set";
-                }
-            }
-            else if (lower.Contains("remind me"))
-            {
-                taskTitle = ExtractAfter(userInput, "remind me");
-                reminder = "No specific time set";
+                taskTitle = extractedTitle.Substring(0, index).Trim();
+                reminder = extractedTitle.Substring(index).Trim();
+                break;
             }
 
-            // Capitalise the task title
-            if (!string.IsNullOrWhiteSpace(taskTitle))
-            {
-                taskTitle = char.ToUpper(taskTitle[0]) + taskTitle.Substring(1);
-            }
+            _taskManager.AddTask(taskTitle, "", reminder);                              // Add the task with the extracted title and reminder
+            _activityLogger.Log($"Reminder set: {taskTitle}");
 
-            // Save the task with the extracted reminder
-            if (!string.IsNullOrWhiteSpace(taskTitle))
-            {
-                _taskManager.AddTask(taskTitle, "", reminder);
-
-                // LOG: Reminder set
-                _activityLogger.Log("Reminder set: '" + taskTitle + "' on 30 May 2026");
-
-                return "TASK_ADDED:⏰ Reminder set for \"" + taskTitle + "\"" +
-                       (reminder == "No specific time set" ? "." : " — " + reminder + ".") +
-                       "\n\nI have also added this to your task list.";
-            }
-
-            // Fallback if extraction failed
-            return "What would you like me to remind you about?";
+            return $"TASK_ADDED: Reminder set for {taskTitle}" +
+                   (reminder == "No specific time set" ? "." : " — " + reminder + ".") +
+                   "\n\nI have also added this to your task list.";
         }
 
+
         /*
-         * NEW: Handles the "show log" intent.
+         * Helper method that extracts text after a matched phrase from the user's input.
+         */
+        private string ExtractFromPhrases(string userInput, List<string> phrases)
+        {
+            string lower = userInput.ToLower();
+
+            foreach (string phrase in phrases)
+            {
+                if (lower.Contains(phrase))
+                    return ExtractAfter(userInput, phrase);
+            }
+
+            return string.Empty;
+        }
+
+
+        /*
+         * Handles the "show log" intent.
          * First call: shows recent activity (last 10 entries) with Show More option
          * Second call (via "show more"): shows full activity log
          */
         private string HandleShowLogIntent()
         {
-            // If the user is requesting "show more", display the full log
             if (_showingFullLog)
             {
-                string fullLog = _activityLogger.GetFullLog();
-                _showingFullLog = false;  // Reset flag for next call
-                return "📋 Here's your complete activity history:\n\n" + fullLog;
+                string fullLog = _activityLogger.GetFullLog();                          // First call: show full log
+                _showingFullLog = false;                                                // Reset flag for next call
+                return "Here's your complete activity history:\n\n" + fullLog;
             }
 
-            // Show recent log (last 10 entries)
-            string recentLog = _activityLogger.GetRecentLog(10);
+            string recentLog = _activityLogger.GetRecentLog(10);                        // Show recent log (last 10 entries)
 
-            // Build response
-            StringBuilder sb = new StringBuilder();
-            sb.AppendLine("📋 Here's a summary of recent actions:\n");
-            sb.Append(recentLog);
+            StringBuilder log = new StringBuilder();
+            log.AppendLine("Here's a summary of recent actions:\n");
+            log.Append(recentLog);
 
-            // If there are more than 10 entries, show "Show More" option
-            if (_activityLogger.GetCount() > 10)
+            if (_activityLogger.GetCount() > 10)                                        // If there are more than 10 entries, show "Show More" option
             {
-                sb.AppendLine("\n\n[Show More] Type 'show more' to see full history");
-                _showingFullLog = true;  // Set flag: next "show more" will show full log
+                log.AppendLine("\n\n[Show More] Type 'show more' to see full history");
+                _showingFullLog = true;                                                 // Set flag: next "show more" will show full log
             }
 
-            return sb.ToString();
+            return log.ToString();                                                      // Return the recent log summary
         }
 
         /*
@@ -470,24 +407,25 @@ namespace CybersecurityChatbot
          *   input   = "Add a task to enable two-factor authentication"
          *   trigger = "add a task to"
          *   returns = "enable two-factor authentication"
-         *
-         * We use IndexOf with StringComparison.OrdinalIgnoreCase so it works
-         * regardless of how the user capitalised the trigger phrase.
          */
         private string ExtractAfter(string input, string trigger)
         {
-            int index = input.IndexOf(trigger, StringComparison.OrdinalIgnoreCase);
+            int index = input.IndexOf(
+                                        trigger, 
+                                        StringComparison.OrdinalIgnoreCase
+                                     );                                                 // Find the index of the trigger phrase in the input
 
-            if (index == -1)
-                return string.Empty;
-
-            // Move past the trigger phrase and trim any leading spaces
-            return input.Substring(index + trigger.Length).Trim();
+            if (index == -1)                                                            // Check if the trigger phrase was not found
+                return string.Empty;                                                    // If not found, return an empty string
+            return input.Substring(index + trigger.Length).Trim();                      // Move past the trigger phrase and trim any leading spaces
         }
 
 
-        // ── Onboarding response methods ───────────────────────────────────────────
-
+        /*
+         * GetFavouriteTopic() retrieves the user's favourite topic from memory.
+         * If the user input is null, it defaults to an empty string.
+         * It combines a personalised intro with the normal response for the topic.
+         */
         public string GetFavouriteTopic(string userInput)
         {
             string safeInput = userInput ?? string.Empty;
@@ -517,126 +455,149 @@ namespace CybersecurityChatbot
         }
 
 
-        // ── Task chat flow methods ────────────────────────────────────────────────
+        // ── Task flow methods ───────────────────────────────────────────────
 
+        /*
+         * ContinueTaskFlow() manages the multi-step task creation process.
+         * It tracks the current step and prompts the user for the next piece of information.
+         */
         private string ContinueTaskFlow(string input)
         {
             switch (_taskStep)
             {
                 case TaskStep.AwaitingTitle:
-                    _pendingTitle = input.Trim();
-                    _taskStep = TaskStep.AwaitingDescription;
-                    return "Got it — \"" + _pendingTitle + "\". Now give a short description.";
+                        _pendingTitle = input.Trim();
+                        _taskStep = TaskStep.AwaitingDescription;
+                    return $"Got it — '{_pendingTitle}'. Now give a short description.";
 
                 case TaskStep.AwaitingDescription:
-                    _pendingDescription = input.Trim();
-                    _taskStep = TaskStep.AwaitingRemindYesNo;
+                        _pendingDescription = input.Trim();
+                        _taskStep = TaskStep.AwaitingRemindYesNo;
                     return "Would you like a reminder for this task? (Yes / No)";
 
                 case TaskStep.AwaitingRemindYesNo:
-                    if (input.ToLower().Contains("yes"))
+                    if (input.ToLower().Contains("yes"))                                // If the user wants a reminder, prompt for the reminder time
                     {
-                        _taskStep = TaskStep.AwaitingReminder;
-                        return "When should I remind you? (e.g. \"Remind me in 7 days\")";
+                        _taskStep = TaskStep.AwaitingReminder;                          // Set state to AwaitingReminder
+                    return "When should I remind you? " +
+                               "(e.g. 'Remind me in 7 days')";
                     }
-                    else
-                    {
-                        _taskManager.AddTask(_pendingTitle, _pendingDescription, "");
 
-                        // LOG: Task added
-                        _activityLogger.Log("Task added: '" + _pendingTitle + "' (Reminder set for 5 days from now)");
-
-                        _taskStep = TaskStep.None;
-                        return "TASK_ADDED:✅ Task added: \"" + _pendingTitle + "\". No reminder set.\n\n" +
-                               "Type \"view tasks\" to see all your tasks.";
-                    }
+                        _taskManager.AddTask(
+                                                _pendingTitle, 
+                                                _pendingDescription, 
+                                                ""
+                                            );                                          // If no reminder, add the task without a reminder
+                        _activityLogger.Log($"Task added: '{_pendingTitle}'");          // Log the task addition
+                        _taskStep = TaskStep.None;                                      // Reset state to None after task creation
+                    return $"TASK_ADDED: Task added: {_pendingTitle}. " +
+                           "No reminder set." +
+                           "\n\nType 'view tasks' to see all your tasks.";
 
                 case TaskStep.AwaitingReminder:
-                    string reminder = input.Trim();
-                    _taskManager.AddTask(_pendingTitle, _pendingDescription, reminder);
-
-                    // LOG: Task added with reminder
-                    _activityLogger.Log("Task added: '" + _pendingTitle + "' (Reminder set for 5 days from now)");
-
+                        string reminder = input.Trim();                                 // Get the reminder time from the user's input
+                        _taskManager.AddTask(
+                                                _pendingTitle, 
+                                                _pendingDescription, reminder
+                                            );
+                        _activityLogger.Log($"Task added: {_pendingTitle}");            // Log the task addition with reminder
                     _taskStep = TaskStep.None;
-                    return "TASK_ADDED:✅ Task added: \"" + _pendingTitle + "\".\n\n" +
-                           "Got it! I'll remind you — " + reminder + ".\n\n" +
-                           "Type \"view tasks\" to see all your tasks.";
+                    return $"TASK_ADDED: Task added: {_pendingTitle}.\n\n" +
+                            "Got it! I'll remind you — {reminder}.\n\n" +
+                            "Type 'view tasks' to see all your tasks.";
 
                 default:
                     _taskStep = TaskStep.None;
-                    return "Something went wrong. Type \"add task\" to try again.";
+                    return "Something went wrong. " +
+                           "Type 'add task' to try again.";
             }
         }
 
-        private string ViewTasksForChat()
+        /*
+         * ViewTasks() retrieves all tasks and formats them for display in the chat.
+         * It shows task ID, title, description, status, reminder and creation date.
+         */
+        private string ChatViewTasks()
         {
-            List<CyberTask> tasks = _taskManager.GetAllTasks();
+            List<CyberTask> tasks = _taskManager.GetAllTasks();                         // Retrieve all tasks from the task manager
 
-            if (tasks.Count == 0)
-                return "You have no tasks yet. Type \"add task\" to create your first one.";
+            if (tasks.Count == 0)                                                       // Check if there are tasks to display
+                return "You have no tasks yet. " +
+                       "Type 'add task' to create your first one.";
 
-            StringBuilder sb = new StringBuilder();
-            sb.AppendLine("📋 Your Cybersecurity Tasks:\n");
+            StringBuilder taskList = new StringBuilder();                               // Use StringBuilder for efficient string concatenation
+            taskList.AppendLine("Your Cybersecurity Tasks:\n");
 
-            for (int i = 0; i < tasks.Count; i++)
+            foreach (CyberTask task in tasks)                                           // Loop through each task and format its details for display
             {
-                CyberTask task = tasks[i];
-                string status = task.IsComplete ? "✅ Done" : "🔲 Pending";
-                string reminder = (task.Reminder == "") ? "None" : task.Reminder;
+                string status = task.IsComplete ? "Done" : "Pending";                   // If task is complete, set Done else set Pending
+                string reminder = task.Reminder == "" ? "None" : task.Reminder;         // If no reminder is set, display None
 
-                sb.AppendLine("[" + task.Id + "] " + task.Title + "  —  " + status);
-                sb.AppendLine("     📝 " + task.Description);
-                sb.AppendLine("     ⏰ Reminder : " + reminder);
-                sb.AppendLine("     🕐 Added    : " + task.CreatedAt);
-                sb.AppendLine();
+                taskList.AppendLine($"[{task.Id}] {task.Title}  —  {status}");
+                taskList.AppendLine($"     📝 {task.Description}");
+                taskList.AppendLine($"     ⏰ Reminder : {reminder}");
+                taskList.AppendLine($"     🕐 Added    : {task.CreatedAt}");
+                taskList.AppendLine();
             }
 
-            sb.AppendLine("──────────────────────────────");
-            sb.AppendLine("To complete : \"complete task 1\"");
-            sb.AppendLine("To delete   : \"delete task 2\"");
+            taskList.AppendLine("──────────────────────────────");
+            taskList.AppendLine("To complete : 'complete task 1'");
+            taskList.AppendLine("To delete   : 'delete task 2'");
 
-            return sb.ToString();
+            return taskList.ToString();
         }
 
-        private string CompleteTaskFromChat(string input)
+        /*
+         * CompleteTaskFromChat() marks a task as complete based on user input.
+         * It extracts the task ID from the input and updates the task status.
+         */
+        private string ChatCompleteTask(string input)
         {
-            string[] words = input.Split(' ');
+            string[] words = input.Split(' ');                                          // Split the input into words to find the task ID
 
             foreach (string word in words)
             {
                 int id;
                 if (int.TryParse(word, out id))
                 {
-                    // LOG: Task marked complete
-                    _activityLogger.Log("Task marked complete: 'Task " + id + "'");
+                    _activityLogger.Log(
+                                          $"Task marked complete: Task {id} + " +
+                                          ""
+                                       );                                               // Log the task completion action
 
                     _taskManager.MarkAsComplete(id);
-                    return "✅ Task " + id + " marked as complete. Great work on your cybersecurity!";
+                    return $"Task {id} + marked as complete. " +
+                           "Great work on your cybersecurity!";
                 }
             }
 
-            return "Please tell me which task number to complete.\nExample: \"complete task 2\"";
+            return "Please tell me which task number to complete." +
+                   "\nExample: complete task 2";
         }
 
-        private string DeleteTaskFromChat(string input)
+        /*
+         * DeleteTaskFromChat() removes a task based on user input.
+         * It extracts the task ID from the input and deletes the task.
+         */
+        private string ChatDeleteTask(string input)
         {
             string[] words = input.Split(' ');
 
             foreach (string word in words)
             {
                 int id;
+
                 if (int.TryParse(word, out id))
                 {
-                    // LOG: Task deleted
                     _activityLogger.Log("Task deleted: 'Task " + id + "'");
 
                     _taskManager.DeleteTask(id);
-                    return "🗑️ Task " + id + " has been deleted.";
+                    return $"Task {id} has been deleted.";
                 }
             }
 
-            return "Please tell me which task number to delete.\nExample: \"delete task 3\"";
+            return "Please tell me which task number to delete." +
+                   "\nExample: \"delete task 3\"";
         }
 
 
@@ -667,19 +628,19 @@ namespace CybersecurityChatbot
             }
             else
             {
-                keywordsResponse = _keywords.GetResponse(userInput ?? string.Empty);
+                keywordsResponse = _keywords.GetResponse(userInput);
 
                 string matchedTopic = GetMatchingTopic(normalizedInput);
                 if (!string.IsNullOrWhiteSpace(matchedTopic))
                 {
                     _memory.Store(CurrentTopicKey, matchedTopic);
-
-                    // LOG: Keyword matched
-                    _activityLogger.Log("Keyword matched: " + matchedTopic + " - response delivered");
+                    _activityLogger.Log(
+                                            $"Keyword matched: {matchedTopic}" +
+                                            " - response delivered");
                 }
             }
 
-            Sentiment sentiment = _sentiment.Detect(userInput ?? string.Empty);
+            Sentiment sentiment = _sentiment.Detect(userInput);
             string sentimentResponse = _sentiment.GetSentimentResponse(sentiment);
             string intro = BuildPersonalisedIntro();
 
@@ -697,6 +658,9 @@ namespace CybersecurityChatbot
             return string.Empty;
         }
 
+        /*
+         * InitialiseMemory() stores the user's name and favourite topic in memory.
+         */
         public void InitialiseMemory(string userName, string favouriteTopic)
         {
             _memory.Store("username", userName);
