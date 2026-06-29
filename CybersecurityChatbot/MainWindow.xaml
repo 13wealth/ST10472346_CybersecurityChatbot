@@ -602,34 +602,35 @@
                         Padding="16"
                         Margin="0,0,0,16">
                     <ScrollViewer VerticalScrollBarVisibility="Auto" Style="{StaticResource ThinScrollViewerStyle}">
-                        <StackPanel x:Name="QuestionPanel">
-                            <TextBlock x:Name="QuizProgressText" Foreground="#071018" FontSize="12" Margin="0,0,0,6"/>
-                            <TextBlock x:Name="QuizScoreText" Foreground="#071018" FontSize="12" Margin="0,0,0,6"/>
-                            <TextBlock x:Name="QuestionText" Foreground="#071018" FontSize="16" TextWrapping="Wrap" Margin="0,6,0,12"/>
+                            <StackPanel>
+                                <StackPanel x:Name="QuestionPanel">
+                                    <TextBlock x:Name="QuizProgressText" Foreground="#071018" FontSize="12" Margin="0,0,0,6"/>
+                                    <TextBlock x:Name="QuizScoreText" Foreground="#071018" FontSize="12" Margin="0,0,0,6"/>
+                                    <TextBlock x:Name="QuestionText" Foreground="#071018" FontSize="16" TextWrapping="Wrap" Margin="0,6,0,12"/>
 
-                            <StackPanel x:Name="MultipleChoicePanel" Margin="0,6,0,6">
-                                <RadioButton x:Name="OptionA" Content="Option A" GroupName="Options"/>
-                                <RadioButton x:Name="OptionB" Content="Option B" GroupName="Options"/>
-                                <RadioButton x:Name="OptionC" Content="Option C" GroupName="Options"/>
-                                <RadioButton x:Name="OptionD" Content="Option D" GroupName="Options"/>
+                                    <StackPanel x:Name="MultipleChoicePanel" Margin="0,6,0,6">
+                                        <RadioButton x:Name="OptionA" Content="Option A" GroupName="Options"/>
+                                        <RadioButton x:Name="OptionB" Content="Option B" GroupName="Options"/>
+                                        <RadioButton x:Name="OptionC" Content="Option C" GroupName="Options"/>
+                                        <RadioButton x:Name="OptionD" Content="Option D" GroupName="Options"/>
+                                    </StackPanel>
+
+                                    <StackPanel x:Name="TrueFalsePanel" Margin="0,6,0,6" Visibility="Collapsed">
+                                        <RadioButton x:Name="OptionTrue" Content="True" GroupName="TF"/>
+                                        <RadioButton x:Name="OptionFalse" Content="False" GroupName="TF"/>
+                                    </StackPanel>
+
+                                    <Border x:Name="FeedbackBorder" Background="#14253A" CornerRadius="8" Padding="8" Visibility="Collapsed" Margin="0,8,0,8">
+                                        <TextBlock x:Name="FeedbackText" Foreground="White"/>
+                                    </Border>
+                                </StackPanel>
+
+                                <!-- Results panel shown at end of quiz -->
+                                <StackPanel x:Name="ResultsPanel" Visibility="Collapsed" Margin="0,8,0,8">
+                                    <TextBlock x:Name="FinalScoreText" Foreground="#071018" FontSize="18" FontWeight="Bold" Margin="0,6,0,4"/>
+                                    <TextBlock x:Name="FinalMessageText" Foreground="#165DA7" FontSize="13" TextWrapping="Wrap"/>
+                                </StackPanel>
                             </StackPanel>
-
-                            <StackPanel x:Name="TrueFalsePanel" Margin="0,6,0,6" Visibility="Collapsed">
-                                <RadioButton x:Name="OptionTrue" Content="True" GroupName="TF"/>
-                                <RadioButton x:Name="OptionFalse" Content="False" GroupName="TF"/>
-                            </StackPanel>
-
-                            <Border x:Name="FeedbackBorder" Background="#14253A" CornerRadius="8" Padding="8" Visibility="Collapsed" Margin="0,8,0,8">
-                                <TextBlock x:Name="FeedbackText" Foreground="White"/>
-                            </Border>
-
-                            <!-- Results panel shown at end of quiz -->
-                            <StackPanel x:Name="ResultsPanel" Visibility="Collapsed" Margin="0,8,0,8">
-                                <TextBlock x:Name="FinalScoreText" Foreground="White" FontSize="18" FontWeight="Bold" Margin="0,6,0,4"/>
-                                <TextBlock x:Name="FinalMessageText" Foreground="#A0B8D0" FontSize="13" TextWrapping="Wrap"/>
-                            </StackPanel>
-
-                        </StackPanel>
                     </ScrollViewer>
                 </Border>
 
