@@ -146,7 +146,7 @@ namespace CybersecurityChatbot
             {
                 { "add_task",     HandleAddTaskIntent },                                    // Needs user input so we pass it directly to the handler
                 { "set_reminder", HandleSetReminderIntent }, 
-                { "view_tasks",   _ =>ChatViewTasks() },                                        // Does not need user input so we ignore it with _
+                { "view_tasks",   _ =>ChatViewTasks() },                                    // Does not need user input so we ignore it with _
                 { "show_log",     _ => HandleShowLogIntent() },
                 { "start_quiz",   _ => "OPEN_QUIZ: Let's test your cybersecurity knowledge!" }, 
             };
@@ -157,8 +157,8 @@ namespace CybersecurityChatbot
          * Step 1: Onboarding — ask for name
          * Step 2: Onboarding — ask for favourite topic
          * Step 3: Signal MainWindow that onboarding is done
-         * Step 4: NLP intent detection — runs BEFORE keyword/sentiment logic
-         * Step 5: Task flow continuation if mid-flow
+         * Step 4: Task flow continuation if mid-flow
+         * Step 5: NLP intent detection — runs BEFORE keyword/sentiment logic
          * Step 6: Fall through to existing keyword and sentiment logic
          */
         public string ProcessInput(string userInput)
@@ -170,7 +170,7 @@ namespace CybersecurityChatbot
                     userInput = string.Empty;                                               // If null, set it to an empty string to avoid exceptions
                 }
                 
-                string lower = userInput.ToLower();                                             // Convert the user input to lowercase for case-insensitive matching
+                string lower = userInput.ToLower();                                         // Convert the user input to lowercase for case-insensitive matching
                 string intent = DetectIntent(lower);
 
                 if (_onboardingStep == 0)                                                   // Onboarding Step 1: Show the first prompt asking for the user's name
@@ -200,7 +200,20 @@ namespace CybersecurityChatbot
                 }
 
                 /*
-                 * Step 4: NLP intent detection — runs BEFORE keyword/sentiment logic
+                 * Step 4: Task flow takes priority — check BEFORE NLP intent detection
+                 * Tracks states if task creation is in progress
+                 * This helps the bots memory to know what to expect next from the user
+                 * Without this, the bot would treat the next input from "add task" as a 
+                 *  normal input and not know that it is part of the task creation flow/.
+                 */
+                if (_taskStep != TaskStep.None)                                             
+                {
+                    return ContinueTaskFlow(userInput);                                     
+                }
+
+                /*
+                 * Step 5: NLP intent detection — runs BEFORE keyword/sentiment logic
+                 * NLP intent detection — only runs when NOT mid-flow
                  * If an intent is detected, we look it up in the _intentHandlers dictionary.
                  * If a handler exists, we call it and return its response.
                  */
@@ -212,20 +225,8 @@ namespace CybersecurityChatbot
                                             "' from: '" +
                                             userInput +
                                             "'"
-                                       );
+                    );
                     return handler(userInput);
-                }
-
-                /*
-                 * Step 5: Task flow continuation if mid-flow
-                 * Tracks states if task creation is in progress
-                 * This helps the bots memory to know what to expect next from the user
-                 * Without this, the bot would treat the next input from "add task" as a 
-                 *  normal input and not know that it is part of the task creation flow/.
-                 */
-                if (_taskStep != TaskStep.None)                                             
-                {
-                    return ContinueTaskFlow(userInput);                                     
                 }
 
                 if (lower.Contains("complete task"))
@@ -467,8 +468,9 @@ namespace CybersecurityChatbot
             {
                 case TaskStep.AwaitingTitle:
                         _pendingTitle = input.Trim();
-                        _taskStep = TaskStep.AwaitingDescription;
-                    return $"Got it — '{_pendingTitle}'. Now give a short description.";
+                        _taskStep = TaskStep.AwaitingDescription;                       // Set state to AwaitingDescription
+                    return $"Got it — '{_pendingTitle}'. " +
+                           "Now give a short description.";
 
                 case TaskStep.AwaitingDescription:
                         _pendingDescription = input.Trim();
@@ -503,7 +505,7 @@ namespace CybersecurityChatbot
                         _activityLogger.Log($"Task added: {_pendingTitle}");            // Log the task addition with reminder
                     _taskStep = TaskStep.None;
                     return $"TASK_ADDED: Task added: {_pendingTitle}.\n\n" +
-                            "Got it! I'll remind you — {reminder}.\n\n" +
+                            $"Got it! I'll remind you — {reminder}.\n\n" +
                             "Type 'view tasks' to see all your tasks.";
 
                 default:
@@ -605,13 +607,12 @@ namespace CybersecurityChatbot
 
         private string BuildNormalResponse(string userInput)
         {
-            string normalizedInput = userInput?.ToLowerInvariant() ?? string.Empty;
+            string normalizedInput = userInput?.ToLowerInvariant();                     // Normalize the input to lowercase for consistent processing
 
             bool isFollowUpRequest = normalizedInput.Contains("tell me more") ||
                                      normalizedInput.Contains("more details") ||
                                      normalizedInput == "more";
-
-            string keywordsResponse;
+            string keywordsResponse;                                                    // Variable to hold the response from the keyword responder
 
             if (isFollowUpRequest)
             {
@@ -640,9 +641,9 @@ namespace CybersecurityChatbot
                 }
             }
 
-            Sentiment sentiment = _sentiment.Detect(userInput);
-            string sentimentResponse = _sentiment.GetSentimentResponse(sentiment);
-            string intro = BuildPersonalisedIntro();
+            Sentiment sentiment = _sentiment.Detect(userInput);                             // Detect the sentiment of the user's input
+            string sentimentResponse = _sentiment.GetSentimentResponse(sentiment);          // Get a response based on the detected sentiment
+            string intro = BuildPersonalisedIntro();                                        // Build a personalised intro if applicable
 
             return CombineResponses(intro, sentimentResponse, keywordsResponse);
         }
@@ -673,6 +674,11 @@ namespace CybersecurityChatbot
             return _memory.Recall(key);
         }
 
+        /*
+         * BuildPersonalisedIntro() constructs a personalised introduction message
+         * based on the user's stored name and favourite topic.
+         * It ensures the intro is only shown once per session.
+         */
         private string BuildPersonalisedIntro()
         {
             if (_hasShownPersonalisedIntro)

@@ -10,54 +10,32 @@ namespace CybersecurityChatbot
      */
     public class TaskManager
     {
-        // The storage helper that handles all file reading and writing
-        private TaskStorageHelper _storage;
+        private TaskStorageHelper _storage;                                             // The storage helper that handles all file reading and writing
 
-        /*
-         * Constructor — creates the TaskStorageHelper when TaskManager is created.
-         */
-        public TaskManager()
+        public TaskManager()                                                            // Constructor — creates the TaskStorageHelper when TaskManager is created.
         {
             _storage = new TaskStorageHelper();
         }
 
-        /*
-         * AddTask() — calls storage to save the task and returns a confirmation message.
-         */
-        public string AddTask(string title, string description, string reminder)
+        public string AddTask(string title, string description, string reminder)        // Calls storage to save the task and returns a confirmation message.
         {
             _storage.AddTask(title, description, reminder);
-
-            // ActivityLogger will be added in Task 4
-            return "✅ Task added: \"" + title + "\"";
+            return "Task added: \"" + title + "\"";                                  // ActivityLogger will be added in Task 4
         }
 
-        /*
-         * GetAllTasks() — loads and returns the full list of tasks from the file.
-         */
-        public List<CyberTask> GetAllTasks()
+        public List<CyberTask> GetAllTasks()                                            // Loads and returns the full list of tasks from the file.
         {
             return _storage.LoadTasks();
         }
 
-        /*
-         * MarkAsComplete() — marks the task with the given ID as done.
-         */
-        public void MarkAsComplete(int id)
+        public void MarkAsComplete(int id)                                              // Marks the task with the given ID as done.
         {
             _storage.MarkAsCompleted(id);
-
-            // ActivityLogger will be added in Task 4
         }
 
-        /*
-         * DeleteTask() — removes the task with the given ID.
-         */
-        public void DeleteTask(int id)
+        public void DeleteTask(int id)                                                  // Removes the task with the given ID.
         {
             _storage.DeleteTask(id);
-
-            // ActivityLogger will be added in Task 4
         }
     }
 }

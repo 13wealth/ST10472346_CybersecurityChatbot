@@ -12,7 +12,7 @@ namespace CybersecurityChatbot
     public class CyberTask
     {
         public int Id { get; set; }
-        public string Title { get; set; } = string.Empty;                                                          // Tell C# that this property can be null, avoids nullable warnings
+        public string Title { get; set; } = string.Empty;                               // Tell C# that this property cannot be null, avoids nullable warnings
         public string Description { get; set; } = string.Empty;
         public string Reminder { get; set; } = string.Empty;
         public bool IsComplete { get; set; }

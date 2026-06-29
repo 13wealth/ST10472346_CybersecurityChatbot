@@ -13,18 +13,10 @@ namespace CybersecurityChatbot
      * The GUI calls these methods one at a time as the user moves through the quiz.
      */
     public class QuizManager
-    {
-        // The full list of quiz questions
-        private List<QuizQuestion> _questions;
-
-        // Tracks which question we are currently on (starts at 0)
-        private int _currentIndex = 0;
-
-        // Tracks how many correct answers the user has given
-        private int _score = 0;
-
-
-        // ── Constructor ───────────────────────────────────────────────────────────
+    { 
+        private List<QuizQuestion> _questions;                                          // The full list of quiz questions
+        private int _currentIndex = 0;                                                  // Tracks which question we are currently on (starts at 0)
+        private int _score = 0;                                                         // Tracks how many correct answers the user has given
 
         /*
          * The constructor creates all the quiz questions and stores them in the list.
@@ -34,6 +26,7 @@ namespace CybersecurityChatbot
         public QuizManager()
         {
             _questions = new List<QuizQuestion>();
+
 
             // ── Phishing (2 questions) ────────────────────────────────────────────
 
@@ -61,6 +54,7 @@ namespace CybersecurityChatbot
                 IsTrueFalse = true
             });
 
+
             // ── Password Safety (2 questions) ─────────────────────────────────────
 
             _questions.Add(new QuizQuestion
@@ -86,6 +80,7 @@ namespace CybersecurityChatbot
                 Explanation = "If one account is compromised, all your other accounts become vulnerable. Use a unique password for each account.",
                 IsTrueFalse = true
             });
+
 
             // ── Safe Browsing (2 questions) ───────────────────────────────────────
 
@@ -119,6 +114,7 @@ namespace CybersecurityChatbot
                 IsTrueFalse = false
             });
 
+
             // ── Social Engineering (2 questions) ──────────────────────────────────
 
             _questions.Add(new QuizQuestion
@@ -145,6 +141,7 @@ namespace CybersecurityChatbot
                 IsTrueFalse = false
             });
 
+
             // ── Two-Factor Authentication (1 question) ────────────────────────────
 
             _questions.Add(new QuizQuestion
@@ -161,6 +158,7 @@ namespace CybersecurityChatbot
                 Explanation = "2FA requires a second verification step — like a code sent to your phone — making it much harder for attackers to access your account.",
                 IsTrueFalse = false
             });
+
 
             // ── Malware and Ransomware (2 questions) ──────────────────────────────
 
@@ -188,6 +186,7 @@ namespace CybersecurityChatbot
                 IsTrueFalse = false
             });
 
+
             // ── Privacy Settings (1 question) ─────────────────────────────────────
 
             _questions.Add(new QuizQuestion
@@ -204,6 +203,7 @@ namespace CybersecurityChatbot
                 Explanation = "Limiting who can see your posts and personal details reduces the risk of identity theft and targeted attacks.",
                 IsTrueFalse = false
             });
+
 
             // ── Data Backup (1 question) ──────────────────────────────────────────
 
@@ -242,7 +242,6 @@ namespace CybersecurityChatbot
          */
         public bool SubmitAnswer(string answer)
         {
-            // Trim and compare — ignore case so "c" matches "C"
             bool isCorrect = answer.Trim().ToUpper() == _questions[_currentIndex].CorrectAnswer.ToUpper();
 
             if (isCorrect)
@@ -301,16 +300,15 @@ namespace CybersecurityChatbot
          */
         public string GetFinalMessage()
         {
-            // Work out the percentage the user scored
-            double percentage = (double)_score / _questions.Count * 100;
+            double percentage = (double)_score / _questions.Count * 100;                // Work out the percentage the user scored
 
             if (percentage >= 70)
             {
-                return "🎉 Great job! You have a solid understanding of cybersecurity.";
+                return "Great job! You have a solid understanding of cybersecurity.";
             }
             else
             {
-                return "📚 Keep learning! Review the topics above and try again to improve your score.";
+                return "Keep learning! Review the topics above and try again to improve your score.";
             }
         }
 

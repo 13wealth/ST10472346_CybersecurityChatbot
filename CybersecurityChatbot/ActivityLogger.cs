@@ -5,31 +5,30 @@ public class ActivityLogger
 {
     private List<string> _log = new List<string>();
 
-    /// <summary>
-    /// Logs an action with a timestamp
-    /// </summary>
+    /*
+     * This class is used to log user activity in the chatbot application.
+     */
     public void Log(string action)
     {
         string entry = DateTime.Now.ToString("[HH:mm] ") + action;
         _log.Add(entry);
     }
 
-    /// <summary>
-    /// Returns the last 'count' entries as a numbered list
-    /// If fewer than count entries exist, returns all of them
-    /// </summary>
+    /*
+     * Returns the last 'count' entries as a numbered list. 
+     * If there are fewer than 'count' entries, it returns all of them.
+     */
     public string GetRecentLog(int count = 10)
     {
         if (_log.Count == 0)
             return "No activity logged yet.";
 
-        // Figure out where to start (last 'count' entries)
-        int startIndex = _log.Count - count;
+        int startIndex = _log.Count - count;                                            // Figure out where to start (last 'count' entries)
         if (startIndex < 0)
             startIndex = 0;
 
-        // Build the numbered list
-        string result = "";
+        
+        string result = "";                                                             // Build the numbered list
         int entryNumber = 1;
 
         for (int i = startIndex; i < _log.Count; i++)
@@ -38,31 +37,31 @@ public class ActivityLogger
             entryNumber = entryNumber + 1;
         }
 
-        // Remove the last newline
-        return result.TrimEnd();
+        
+        return result.TrimEnd();                                                        // Remove the last newline
     }
 
-    /// <summary>
-    /// Returns all entries as a numbered list
-    /// </summary>
+    /*
+     * Returns all entries in the log as a numbered list.
+     */
     public string GetFullLog()
     {
         if (_log.Count == 0)
             return "No activity logged yet.";
 
-        string result = "";
+        string result = ""; 
 
-        for (int i = 0; i < _log.Count; i++)
+        for (int i = 0; i < _log.Count; i++)                                            // Iterate through the entire log and build a numbered list
         {
-            result = result + (i + 1) + ". " + _log[i] + "\n";
+            result = result + (i + 1) + ". " + _log[i] + "\n";                          // Build the numbered list
         }
 
         return result.TrimEnd();
     }
 
-    /// <summary>
-    /// Returns the total number of entries in the log
-    /// </summary>
+    /*
+     * Returns the number of entries in the log.
+     */
     public int GetCount()
     {
         return _log.Count;

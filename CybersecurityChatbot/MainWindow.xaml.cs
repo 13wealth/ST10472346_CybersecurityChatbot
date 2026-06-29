@@ -195,8 +195,8 @@ namespace CybersecurityChatbot
         private void LoadTasksIntoList()
         {
             List<CyberTask> tasks = _taskManager.GetAllTasks();
-            TaskListBox.ItemsSource = null;     // Clear first to force a refresh
-            TaskListBox.ItemsSource = tasks;    // Bind the updated list to the GUI
+            TaskListBox.ItemsSource = null;                                             // Clear first to force a refresh
+            TaskListBox.ItemsSource = tasks;                                            // Bind the updated list to the GUI
         }
 
         /*
@@ -209,24 +209,24 @@ namespace CybersecurityChatbot
             string description = TaskDescriptionInput.Text.Trim();
             string reminder = TaskReminderInput.Text.Trim();
 
-            // Title is required — warn the user if it is empty
-            if (string.IsNullOrWhiteSpace(title))
+            if (string.IsNullOrWhiteSpace(title))                                       // Validate that the title is not empty
             {
-                AppendBotMessage("⚠️ Please enter a task title before adding.");
+                AppendBotMessage("Please enter a task title before adding.");
                 return;
             }
 
-            // Add the task and show the confirmation in the chat
-            string confirmation = _taskManager.AddTask(title, description, reminder);
+            string confirmation = _taskManager.AddTask(
+                                                        title, 
+                                                        description, 
+                                                        reminder
+            );                                                                          // Adds the task and get a confirmation message 
             AppendBotMessage(confirmation);
 
-            // Clear the input fields ready for the next task
-            TaskTitleInput.Text = "";
-            TaskDescriptionInput.Text = "";
-            TaskReminderInput.Text = "";
+            TaskTitleInput.Text = "";                                                   // Clear the input fields ready for the next task
+            TaskDescriptionInput.Text = "";                                             // Clear the input fields ready for the next task 
+            TaskReminderInput.Text = "";                                                // Clear the input fields ready for the next task
 
-            // Refresh the list so the new task appears immediately
-            LoadTasksIntoList();
+            LoadTasksIntoList();                                                        // Refresh the list so the new task appears immediately
         }
 
         /*
@@ -235,21 +235,18 @@ namespace CybersecurityChatbot
          */
         private void MarkCompleteButton_Click(object sender, RoutedEventArgs e)
         {
-            // Cast the selected item in the ListBox to a CyberTask object (nullable)
-            CyberTask? selectedTask = TaskListBox.SelectedItem as CyberTask;
+            CyberTask? selectedTask = TaskListBox.SelectedItem as CyberTask;            // Get the currently selected task from the list box
 
-            // Nothing selected — ask the user to pick one first
-            if (selectedTask == null)
+            if (selectedTask == null)                                                   // Check if no task is selected
             {
-                AppendBotMessage("⚠️ Please select a task from the list first.");
+                AppendBotMessage("Please select a task from the list first.");          // If not, show a warning message
                 return;
             }
 
-            _taskManager.MarkAsComplete(selectedTask.Id);
-            AppendBotMessage("✅ \"" + selectedTask.Title + "\" marked as complete!");
+            _taskManager.MarkAsComplete(selectedTask.Id); // Mark the selected task as complete in the tasks.json file
+            AppendBotMessage($"{selectedTask.Title} marked as complete!"); // Show a confirmation message to the user
 
-            // Refresh the list so the tick icon updates on screen immediately
-            LoadTasksIntoList();
+            LoadTasksIntoList();                                                        // Refresh the list so the updated task status appears immediately
         }
 
         /*
@@ -262,15 +259,15 @@ namespace CybersecurityChatbot
 
             if (selectedTask == null)
             {
-                AppendBotMessage("⚠️ Please select a task from the list first.");
+                AppendBotMessage("Please select a task from the list first.");
                 return;
             }
 
             _taskManager.DeleteTask(selectedTask.Id);
-            AppendBotMessage("🗑️ \"" + selectedTask.Title + "\" has been deleted.");
+            AppendBotMessage($"{selectedTask.Title} has been deleted.");
 
-            // Refresh the list so the deleted task disappears immediately
-            LoadTasksIntoList();
+            
+            LoadTasksIntoList();                                                        // Refresh the list so the deleted task disappears immediately
         }
 
         // ── UI Quiz Handlers ─────────────────────────────────────────────────
@@ -280,18 +277,20 @@ namespace CybersecurityChatbot
          */
         private void OpenQuizButton_Click(object sender, RoutedEventArgs e)
         {
-            // Reset so the quiz always starts fresh
-            _quizManager.ResetQuiz();
+            _quizManager.ResetQuiz();                                                   // Reset so the quiz always starts fresh
 
-            // Show the panel with the same animation as the chat panel
-            QuizColumn.Width = new GridLength(1.75, GridUnitType.Star);
+            QuizColumn.Width = new GridLength(1.75, GridUnitType.Star);                 // Show the panel with the same animation as the chat panel
             QuizPanelBorder.Visibility = Visibility.Visible;
+            QuizPanelBorder.BeginAnimation(
+                                            OpacityProperty,
+                                            new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(400))
+             );
+            QuizSlideTransform.BeginAnimation(
+                                                TranslateTransform.XProperty,
+                                                new DoubleAnimation(180, 0, TimeSpan.FromMilliseconds(400))
+             );
 
-            QuizPanelBorder.BeginAnimation(OpacityProperty, new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(400)));
-            QuizSlideTransform.BeginAnimation(TranslateTransform.XProperty, new DoubleAnimation(180, 0, TimeSpan.FromMilliseconds(400)));
-
-            // Load the first question
-            LoadCurrentQuestion();
+            LoadCurrentQuestion();                                                      // Loads the first question from QuizManager
         }
 
         /*
@@ -311,20 +310,20 @@ namespace CybersecurityChatbot
          */
         private void LoadCurrentQuestion()
         {
-            QuizQuestion question = _quizManager.GetCurrentQuestion();
-
-            // Update progress and score display
-            QuizProgressText.Text = _quizManager.GetQuestionProgress();
-            QuizScoreText.Text = _quizManager.GetCurrentScore();
-
-            // Show the question text
+            QuizQuestion question = _quizManager.GetCurrentQuestion();                  // Get the current question from QuizManager
+            QuizProgressText.Text = _quizManager.GetQuestionProgress();                 // Updates progress and score display
+            QuizScoreText.Text = _quizManager.GetCurrentScore();                        // Show the question text
             QuestionText.Text = question.Question;                                      // Display the question text in the designated TextBlock
 
-            // Hide feedback from the previous question
-            FeedbackBorder.Visibility = Visibility.Collapsed;
+            /*
+             * Reset the UI for the new question:
+             * - Hide feedback and next button
+             * - Show submit button
+             * - Clear all radio buttons to ensure no previous selection is carried over
+             */
+            FeedbackBorder.Visibility = Visibility.Collapsed; 
             NextQuestionButton.Visibility = Visibility.Collapsed;
             SubmitAnswerButton.Visibility = Visibility.Visible;
-
             OptionA.IsChecked = false;                                                  // Clear all radio buttons to ensure no previous selection is carried over
             OptionB.IsChecked = false;
             OptionC.IsChecked = false;
@@ -334,18 +333,14 @@ namespace CybersecurityChatbot
 
             if (question.IsTrueFalse)
             {
-                // Show True/False buttons, hide multiple choice
-                MultipleChoicePanel.Visibility = Visibility.Collapsed;
+                MultipleChoicePanel.Visibility = Visibility.Collapsed;                  // Show True/False buttons, hide multiple choice
                 TrueFalsePanel.Visibility = Visibility.Visible;
             }
             else
             {
-                // Show multiple choice buttons, hide True/False
-                MultipleChoicePanel.Visibility = Visibility.Visible;
+                MultipleChoicePanel.Visibility = Visibility.Visible;                    // Show multiple choice buttons, hide True/False
                 TrueFalsePanel.Visibility = Visibility.Collapsed;
-
-                // Set the text for each option from the question's options list
-                OptionA.Content = question.Options[0];
+                OptionA.Content = question.Options[0];                                  // Set the text for each option from the question's options list
                 OptionB.Content = question.Options[1];
                 OptionC.Content = question.Options[2];
                 OptionD.Content = question.Options[3];
@@ -362,8 +357,7 @@ namespace CybersecurityChatbot
             QuizQuestion question = _quizManager.GetCurrentQuestion();
             string selectedAnswer = "";
 
-            // Work out which radio button the user selected
-            if (question.IsTrueFalse)
+            if (question.IsTrueFalse)                                                   // Work out which radio button the user selected
             {
                 if (OptionTrue.IsChecked == true) selectedAnswer = "True";
                 if (OptionFalse.IsChecked == true) selectedAnswer = "False";
@@ -376,8 +370,7 @@ namespace CybersecurityChatbot
                 if (OptionD.IsChecked == true) selectedAnswer = "D";
             }
 
-            // Make sure the user actually selected something
-            if (string.IsNullOrEmpty(selectedAnswer))
+            if (string.IsNullOrEmpty(selectedAnswer))                                   // Make sure the user actually selected something
             {
                 FeedbackBorder.Visibility = Visibility.Visible;
                 FeedbackText.Text = "⚠️ Please select an answer before submitting.";
@@ -386,20 +379,14 @@ namespace CybersecurityChatbot
 
             bool isCorrect = _quizManager.SubmitAnswer(selectedAnswer);                 // Submit the answer to QuizManager and get back true or false
 
-            // Show the feedback
-            FeedbackBorder.Visibility = Visibility.Visible;
+            FeedbackBorder.Visibility = Visibility.Visible;                             // Show the feedback panel
             FeedbackText.Text = _quizManager.GetFeedback(isCorrect);
-
-            // Update the score display
-            QuizScoreText.Text = _quizManager.GetCurrentScore();
-
-            // Hide Submit, show Next (or results if finished)
-            SubmitAnswerButton.Visibility = Visibility.Collapsed;
+            QuizScoreText.Text = _quizManager.GetCurrentScore();                        // Update the score display    
+            SubmitAnswerButton.Visibility = Visibility.Collapsed;                       // Hide Submit, show Next (or results if finished)
 
             if (_quizManager.IsFinished())
             {
-                // Show the results screen after a short delay via Next button
-                NextQuestionButton.Content = "See Results ➡";
+                NextQuestionButton.Content = "See Results ➡";                           // Show the results screen after a short delay via Next button
                 NextQuestionButton.Visibility = Visibility.Visible;
             }
             else
@@ -416,23 +403,19 @@ namespace CybersecurityChatbot
         {
             if (_quizManager.IsFinished())
             {
-                // Show the results screen
-                QuestionPanel.Visibility = Visibility.Collapsed;
-                ResultsPanel.Visibility = Visibility.Visible;
-                FeedbackBorder.Visibility = Visibility.Collapsed;
-
-                NextQuestionButton.Visibility = Visibility.Collapsed;
-                SubmitAnswerButton.Visibility = Visibility.Collapsed;
-                PlayAgainButton.Visibility = Visibility.Visible;
-
-                FinalScoreText.Text = _quizManager.GetFinalScore();
-                FinalMessageText.Text = _quizManager.GetFinalMessage();
-                QuizProgressText.Text = "Quiz Complete!";
+                QuestionPanel.Visibility = Visibility.Collapsed;                        // Hide the question panel
+                ResultsPanel.Visibility = Visibility.Visible;                           // Show the results panel
+                FeedbackBorder.Visibility = Visibility.Collapsed;                       // Hide feedback panel
+                NextQuestionButton.Visibility = Visibility.Collapsed;                   // Hide Next button
+                SubmitAnswerButton.Visibility = Visibility.Collapsed;                   // Hide Submit button
+                PlayAgainButton.Visibility = Visibility.Visible;                        // Show Play Again button
+                FinalScoreText.Text = _quizManager.GetFinalScore();                     // Display the final score
+                FinalMessageText.Text = _quizManager.GetFinalMessage();                 // Display the final message based on performance
+                QuizProgressText.Text = "Quiz Complete!";                               // Update progress text to indicate completion
             }
             else
             {
-                // Load the next question
-                LoadCurrentQuestion();
+                LoadCurrentQuestion();                                                  // Load the next question
             }
         }
 
@@ -444,7 +427,6 @@ namespace CybersecurityChatbot
         {
             _quizManager.ResetQuiz();
 
-            // Hide results, show question panel
             ResultsPanel.Visibility = Visibility.Collapsed;
             QuestionPanel.Visibility = Visibility.Visible;
             PlayAgainButton.Visibility = Visibility.Collapsed;

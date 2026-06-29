@@ -141,7 +141,6 @@ namespace CybersecurityChatbot.Behaviors
             AnimateEye(element.FindName("RightEye") as FrameworkElement);
         }
 
-        // Allow nullable FrameworkElement to avoid warnings when FindName can return null.
         private static void AnimateEye(FrameworkElement? eye)
         {
             if (eye == null)
